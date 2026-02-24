@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth-styles.css">
+</head>
+<body>
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-right">
+        <div class="auth-container">
+            <div class="auth-header">
+                <h1>SMART CITY</h1>
+                <p>Intelligent Urban Management System</p>
+            </div>
+
+            <div id="loginForm" class="auth-form active">
+                <h2>Login</h2>
+                
+                <div class="login-type-selector">
+                    <div class="login-type-btn" id="userLoginBtn" data-type="user">
+                        <span class="icon">👤</span>
+                        <span class="label">User Login</span>
+                    </div>
+                    <div class="login-type-btn" id="adminLoginBtn" data-type="admin">
+                        <span class="icon">🔒</span>
+                        <span class="label">Admin Login</span>
+                    </div>
+                </div>
+                
+                <form id="loginFormElement" novalidate>
+                    <input type="hidden" id="loginRole" value="user">
+                    <div class="form-group">
+                        <label for="loginName">Name (Username)</label>
+                        <input type="text" id="loginName" required>
+                        <span class="error-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                        <span class="error-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="captcha">Enter CAPTCHA *</label>
+                        <div class="captcha-container">
+                            <div class="captcha-code" id="captchaCode" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff !important; padding: 1rem; border-radius: 10px; font-size: 1.8rem; font-weight: bold; letter-spacing: 0.8rem; text-align: center; min-height: 50px; display: flex; align-items: center; justify-content: center;"></div>
+                            <button type="button" class="captcha-refresh" id="refreshCaptcha">🔄</button>
+                        </div>
+                        <input type="text" id="captchaInput" required placeholder="Enter code above">
+                        <span class="error-message"></span>
+                    </div>
+                    <button type="submit" class="btn-primary">Login</button>
+                </form>
+                <p class="auth-switch">Don't have an account? <a href="#" id="showRegister">Register as User</a></p>
+                <p class="demo-credentials">
+                    <strong>🔑 Demo Credentials</strong><br>
+                    <small>
+                        <strong>Admin:</strong> Tarun / Tarun@1234<br>
+                        <strong>User:</strong> Regular User / user123
+                    </small>
+                </p>
+            </div>
+
+            <div id="registerForm" class="auth-form">
+                <h2>Create Account</h2>
+                <form id="registerFormElement" novalidate>
+                    <div class="form-group">
+                        <label for="regName">Full Name *</label>
+                        <input type="text" id="regName" required>
+                        <span class="error-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPhone">Phone Number *</label>
+                        <input type="tel" id="regPhone" required pattern="[0-9]{10}" maxlength="10" placeholder="10 digits only">
+                        <span class="error-message"></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Password *</label>
+                        <input type="password" id="regPassword" required minlength="6">
+                        <span class="error-message"></span>
+                    </div>
+                    <button type="submit" class="btn-primary">Create Account</button>
+                </form>
+                <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Login</a></p>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <div id="appScreen" class="app-screen hidden">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <span class="logo">🏙️</span>
+            <h1>Smart City</h1>
+        </div>
+        <ul class="nav-menu">
+            <li><a href="#dashboard" class="nav-link active" data-page="dashboard">🏙️ Dashboard</a></li>
+            <li><a href="#tourists" class="nav-link" data-page="tourists">🏛️ Famous Places</a></li>
+            <li><a href="#environment" class="nav-link" data-page="environment">🌱 Environment</a></li>
+            <li><a href="#services" class="nav-link" data-page="services">🏛️ Services</a></li>
+            <li><a href="#report" class="nav-link" data-page="report">📝 Report Issue</a></li>
+            <li><a href="#issues" class="nav-link" data-page="issues">📋 My Issues <span class="notification-badge" id="userNotification" style="display:none;">0</span></a></li>
+            <li><a href="#admin" class="nav-link admin-only" data-page="admin" style="display:none;">🔒 Admin Panel <span class="notification-badge" id="adminNotification" style="display:none;">0</span></a></li>
+        </ul>
+        <div class="nav-controls">
+            <div class="color-picker-wrapper">
+                <button class="color-picker-btn" id="colorPickerBtn">🎨</button>
+                <div class="color-options" id="colorOptions">
+                    <button class="color-option" data-color="#3b82f6" style="background: #3b82f6"></button>
+                    <button class="color-option" data-color="#10b981" style="background: #10b981"></button>
+                    <button class="color-option" data-color="#f59e0b" style="background: #f59e0b"></button>
+                    <button class="color-option" data-color="#ef4444" style="background: #ef4444"></button>
+                    <button class="color-option" data-color="#8b5cf6" style="background: #8b5cf6"></button>
+                    <button class="color-option" data-color="#ec4899" style="background: #ec4899"></button>
+                </div>
+            </div>
+            <span class="user-role" id="userRole"></span>
+            <span class="user-name" id="userName"></span>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+            <button class="btn-logout" id="logoutBtn">Logout</button>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div id="dashboard" class="page active">
+            <section class="hero">
+                <div class="hero-content">
+                    <h2>Welcome to Smart City Dashboard</h2>
+                    <p class="hero-subtitle">Real-time Intelligent Urban Management & Monitoring System</p>
+                    
+                    <div class="hero-badges">
+                        <div class="hero-badge success">
+                            <span class="badge-icon">✅</span>
+                            <span>All Systems Operational</span>
+                        </div>
+                        <div class="hero-badge info">
+                            <span class="badge-icon">🔄</span>
+                            <span>Live Updates</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <span class="hero-stat-icon">🕒</span>
+                            <div>
+                                <span class="hero-stat-value" id="liveTime">00:00:00</span>
+                                <span class="hero-stat-label">Live Time</span>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="hero-stat-icon">👥</span>
+                            <div>
+                                <span class="hero-stat-value" id="activeUsers">1,234</span>
+                                <span class="hero-stat-label">Active Citizens</span>
+                            </div>
+                        </div>
+                        <div class="hero-stat">
+                            <span class="hero-stat-icon">🏛️</span>
+                            <div>
+                                <span class="hero-stat-value" id="touristCount">0</span>
+                                <span class="hero-stat-label">Tourist Places</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        <div class="stats-grid">
+            <div class="stat-card traffic animated">
+                <div class="stat-icon-wrapper">
+                    <div class="icon">🚦</div>
+                    <div class="stat-trend up">+5%</div>
+                </div>
+                <h3>Traffic Flow</h3>
+                <div class="stat-value">78%</div>
+                <p class="stat-label">Optimal</p>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" style="width: 78%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card environment animated">
+                <div class="stat-icon-wrapper">
+                    <div class="icon">🌱</div>
+                    <div class="stat-trend neutral">•</div>
+                </div>
+                <h3>Air Quality</h3>
+                <div class="stat-value" id="aqiValue">Loading...</div>
+                <p class="stat-label" id="aqiLabel">Fetching data...</p>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" style="width: 90%"></div>
+                </div>
+            </div>
+
+            <div class="stat-card parking animated">
+                <div class="stat-icon-wrapper">
+                    <div class="icon">🅿️</div>
+                    <div class="stat-trend down">-12</div>
+                </div>
+                <h3>Parking</h3>
+                <div class="stat-value">234</div>
+                <p class="stat-label">Spots Available</p>
+                <div class="stat-progress">
+                    <div class="stat-progress-bar" style="width: 65%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modules-grid">
+            <div class="module-card featured">
+                <div class="module-header">
+                    <h3>🚌 Public Transport</h3>
+                    <span class="live-badge">🔴 LIVE</span>
+                </div>
+                <div class="transport-list" id="transportList">
+                    <div class="transport-item"><span>Loading...</span></div>
+                </div>
+            </div>
+
+            <div class="module-card featured">
+                <div class="module-header">
+                    <h3>🌤️ Weather</h3>
+                    <span class="live-badge">🔴 LIVE</span>
+                </div>
+                <div id="weatherData" class="weather-info">
+                    <p>Loading weather data...</p>
+                </div>
+            </div>
+
+            <div class="module-card map-card featured">
+                <div class="module-header">
+                    <h3>🗺️ City Map</h3>
+                    <span class="live-badge">🔴 LIVE</span>
+                </div>
+                <div class="map-placeholder" id="liveMap">
+                    <p style="text-align: center; padding: 2rem;">Loading your location...</p>
+                </div>
+            </div>
+            
+            <div class="module-card quick-actions">
+                <h3>⚡ Quick Actions</h3>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="navigateTo('report')">
+                        <span>📝</span>
+                        <span>Report Issue</span>
+                    </button>
+                    <button class="action-btn" onclick="navigateTo('issues')">
+                        <span>📋</span>
+                        <span>My Issues</span>
+                    </button>
+                    <button class="action-btn" onclick="navigateTo('services')">
+                        <span>🏛️</span>
+                        <span>Services</span>
+                    </button>
+                    <button class="action-btn" onclick="navigateTo('environment')">
+                        <span>🌱</span>
+                        <span>Environment</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="module-card alerts-card">
+                <h3>🚨 Recent Alerts</h3>
+                <div class="alerts-list" id="alertsList">
+                    <p>Loading alerts...</p>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <div id="tourists" class="page">
+            <section class="hero">
+                <h2>Famous Places</h2>
+                <p>Explore famous tourist destinations in the city</p>
+            </section>
+            <div class="modules-grid">
+                <div id="touristPlacesList" class="tourist-grid"></div>
+            </div>
+        </div>
+
+        <div id="transport" class="page">
+            <section class="hero">
+                <h2>Public Transport</h2>
+                <p>Real-time transit information</p>
+            </section>
+            <div class="modules-grid">
+                <div class="module-card">
+                    <h3>🚍 Bus Routes</h3>
+                    <div class="transport-list">
+                        <div class="transport-item"><span>Route 42 - Downtown</span><span class="badge">2 min</span></div>
+                        <div class="transport-item"><span>Route 18 - Airport</span><span class="badge">8 min</span></div>
+                        <div class="transport-item"><span>Route 7 - University</span><span class="badge">12 min</span></div>
+                    </div>
+                </div>
+                <div class="module-card">
+                    <h3>🚇 Metro Lines</h3>
+                    <div class="transport-list">
+                        <div class="transport-item"><span>Line A - North-South</span><span class="badge">5 min</span></div>
+                        <div class="transport-item"><span>Line B - East-West</span><span class="badge">7 min</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="environment" class="page">
+            <section class="hero">
+                <h2>🌱 Environment</h2>
+                <p>Air quality and environmental monitoring</p>
+            </section>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="icon">💨</div>
+                    <h3>Air Quality Index</h3>
+                    <div class="stat-value" id="envAqiValue">Loading...</div>
+                    <p class="stat-label" id="envAqiLabel">Fetching...</p>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">🌡️</div>
+                    <h3>Temperature</h3>
+                    <div class="stat-value" id="tempValue">--°C</div>
+                </div>
+                <div class="stat-card">
+                    <div class="icon">💧</div>
+                    <h3>Humidity</h3>
+                    <div class="stat-value" id="humidityValue">--%</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="services" class="page">
+            <section class="hero">
+                <h2>City Services</h2>
+                <p>Access municipal services and information</p>
+            </section>
+            
+            <div class="admin-section">
+                <h3>📞 Emergency Numbers</h3>
+                <div id="userEmergencyList" class="emergency-list"></div>
+            </div>
+            
+            <div class="modules-grid">
+                <div class="module-card">
+                    <h3>🗑️ Waste Management</h3>
+                    <p>Next collection: Tomorrow, 8:00 AM</p>
+                </div>
+                <div class="module-card">
+                    <h3>💡 Street Lighting</h3>
+                    <p>98% operational</p>
+                </div>
+                <div class="module-card">
+                    <h3>🚰 Water Supply</h3>
+                    <p>Normal pressure</p>
+                </div>
+            </div>
+            
+            <div class="storage-info">
+                <h3>📊 Storage Information</h3>
+                <p><strong>LocalStorage:</strong> Persistent data (users, issues, theme, settings)</p>
+                <p><strong>SessionStorage:</strong> Temporary data (form drafts, session tracking)</p>
+                <p id="storageStats"></p>
+            </div>
+        </div>
+
+        <div id="report" class="page">
+            <section class="hero">
+                <h2>Report an Issue</h2>
+                <p>Help us improve the city by reporting problems</p>
+            </section>
+            
+            <div class="form-container">
+                <form id="reportForm" novalidate>
+                    <div class="form-group">
+                        <label for="name">Full Name *</label>
+                        <input type="text" id="name" name="name" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" pattern="[0-9]{10}" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Issue Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="pothole">Pothole</option>
+                            <option value="streetlight">Street Light</option>
+                            <option value="traffic">Traffic Signal</option>
+                            <option value="waste">Waste Collection</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location">Location *</label>
+                        <input type="text" id="location" name="location" required>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description *</label>
+                        <textarea id="description" name="description" rows="4" required minlength="10"></textarea>
+                        <span class="error-message"></span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">Submit Report</button>
+                        <button type="reset" class="btn-secondary">Clear Form</button>
+                    </div>
+                </form>
+
+                <div id="successMessage" class="success-message hidden">
+                    <span class="icon">✅</span>
+                    <h3>Report Submitted Successfully!</h3>
+                    <p>Your report has been received. Reference ID: <strong id="refId"></strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="issues" class="page">
+            <section class="hero">
+                <h2>My Issues</h2>
+                <p>View and manage your reported issues</p>
+            </section>
+            
+            <div class="issues-container">
+                <div id="issuesList" class="issues-list"></div>
+                <div id="emptyState" class="empty-state">
+                    <span class="icon">📄</span>
+                    <h3>No Issues Reported</h3>
+                    <p>You haven't reported any issues yet</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin" class="page">
+            <section class="hero">
+                <h2>Admin Control Center</h2>
+                <p>Comprehensive city management and analytics</p>
+            </section>
+            
+            <div class="stats-overview">
+                <div class="stat-box">
+                    <div class="stat-box-icon">👥</div>
+                    <div class="stat-box-value" id="totalUsers">0</div>
+                    <div class="stat-box-label">Total Users</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-icon">📝</div>
+                    <div class="stat-box-value" id="totalIssues">0</div>
+                    <div class="stat-box-label">Total Issues</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-icon">⏳</div>
+                    <div class="stat-box-value" id="pendingIssues">0</div>
+                    <div class="stat-box-label">Pending Issues</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-icon">🏛️</div>
+                    <div class="stat-box-value" id="totalPlaces">0</div>
+                    <div class="stat-box-label">Tourist Places</div>
+                </div>
+            </div>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab active" data-tab="issues">📝 Issues</button>
+                <button class="admin-tab" data-tab="users">👥 Users</button>
+                <button class="admin-tab" data-tab="places">🏛️ Places</button>
+                <button class="admin-tab" data-tab="transport">🚌 Transport</button>
+                <button class="admin-tab" data-tab="alerts">🚨 Alerts</button>
+                <button class="admin-tab" data-tab="emergency">📞 Emergency</button>
+            </div>
+            
+            <div class="admin-tab-content active" id="tab-issues">
+                <div class="issues-container">
+                    <h3>All Reported Issues</h3>
+                    <div id="adminIssuesList" class="issues-list"></div>
+                </div>
+            </div>
+            
+            <div class="admin-tab-content" id="tab-users">
+                <div class="admin-section">
+                    <h3>👥 Add New Admin</h3>
+                    <button class="btn-primary" onclick="openAdminModal()" style="margin-bottom: 1rem;">Add Admin User</button>
+                    <div id="adminUsersList" class="emergency-list"></div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>👤 Manage Users</h3>
+                    <div id="regularUsersList" class="emergency-list"></div>
+                </div>
+            </div>
+            
+            <div class="admin-tab-content" id="tab-places">
+                <div class="admin-section">
+                    <h3>🏛️ Manage Tourist Places</h3>
+                    <button class="btn-primary" onclick="openTouristModal()" style="margin-bottom: 1rem;">Add Tourist Place</button>
+                    <div id="adminTouristList" class="emergency-list"></div>
+                </div>
+            </div>
+            
+            <div class="admin-tab-content" id="tab-transport">
+                <div class="admin-section">
+                    <h3>🚌 Manage Public Transport</h3>
+                    <button class="btn-primary" onclick="openBusModal()" style="margin-bottom: 1rem;">Add Bus Route</button>
+                    <div id="busList" class="emergency-list"></div>
+                </div>
+                
+                <div class="admin-section">
+                    <h3>🅿️ Manage Parking Spots</h3>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="parkingSpots">Available Parking Spots *</label>
+                        <input type="number" id="parkingSpots" min="0" placeholder="Enter available spots">
+                        <button class="btn-primary" onclick="updateParkingSpots()" style="margin-top: 0.5rem;">Update Spots</button>
+                    </div>
+                    <p id="currentParking" style="font-size: 1.2rem; font-weight: bold;"></p>
+                </div>
+            </div>
+            
+            <div class="admin-tab-content" id="tab-alerts">
+                <div class="admin-section">
+                    <h3>🚨 Manage Alerts</h3>
+                    <button class="btn-primary" onclick="openAlertModal()" style="margin-bottom: 1rem;">Add Alert</button>
+                    <div id="adminAlertsList" class="emergency-list"></div>
+                </div>
+            </div>
+            
+            <div class="admin-tab-content" id="tab-emergency">
+                <div class="admin-section">
+                    <h3>📞 Emergency Numbers</h3>
+                    <button class="btn-primary" onclick="openEmergencyModal()" style="margin-bottom: 1rem;">Add Emergency Number</button>
+                    <div id="emergencyList" class="emergency-list"></div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>🗺️ City Map</h3>
+                    <div class="map-container" id="adminMap">
+                        <p style="text-align: center; padding: 2rem;">Loading your location...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </main>
+    </div>
+
+    <div id="touristModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🏛️ Tourist Place</h2>
+                <button class="modal-close" id="closeTouristModal">×</button>
+            </div>
+            <form id="touristForm" novalidate>
+                <input type="hidden" id="touristId">
+                <div class="form-group">
+                    <label for="touristName">Place Name *</label>
+                    <input type="text" id="touristName" required placeholder="e.g., Statue of Liberty">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="touristImage">Image URL</label>
+                    <input type="url" id="touristImage" placeholder="https://example.com/image.jpg">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="touristDescription">Description *</label>
+                    <textarea id="touristDescription" required rows="3" placeholder="Brief description"></textarea>
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="touristAddress">Address *</label>
+                    <input type="text" id="touristAddress" required placeholder="Full address">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" class="btn-secondary" id="cancelTourist">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="ratingModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⭐ Rate Solution</h2>
+                <button class="modal-close" id="closeRatingModal">×</button>
+            </div>
+            <div style="padding: 2rem; text-align: center;">
+                <p style="margin-bottom: 2rem; font-size: 1.1rem;">How satisfied are you with the solution?</p>
+                <div class="star-rating" id="starRating">
+                    <span class="star" data-rating="1">★</span>
+                    <span class="star" data-rating="2">★</span>
+                    <span class="star" data-rating="3">★</span>
+                    <span class="star" data-rating="4">★</span>
+                    <span class="star" data-rating="5">★</span>
+                </div>
+                <p id="ratingText" style="margin-top: 1rem; font-size: 1.2rem; font-weight: 600; color: var(--accent);"></p>
+                <input type="hidden" id="ratingIssueId">
+                <div class="form-actions" style="margin-top: 2rem;">
+                    <button class="btn-primary" id="submitRating">Submit Rating</button>
+                    <button class="btn-secondary" id="cancelRating">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="alertModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚨 City Alert</h2>
+                <button class="modal-close" id="closeAlertModal">×</button>
+            </div>
+            <form id="alertForm" novalidate>
+                <input type="hidden" id="alertId">
+                <div class="form-group">
+                    <label for="alertType">Alert Type *</label>
+                    <select id="alertType" required>
+                        <option value="warning">⚠️ Warning</option>
+                        <option value="info">ℹ️ Info</option>
+                        <option value="success">✅ Success</option>
+                    </select>
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="alertMessage">Message *</label>
+                    <input type="text" id="alertMessage" required placeholder="e.g., Heavy traffic on Main St">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" class="btn-secondary" id="cancelAlert">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="busModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🚌 Bus Route</h2>
+                <button class="modal-close" id="closeBusModal">×</button>
+            </div>
+            <form id="busForm" novalidate>
+                <input type="hidden" id="busId">
+                <div class="form-group">
+                    <label for="busNumber">Bus Number *</label>
+                    <input type="text" id="busNumber" required placeholder="e.g., 42">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="busRoute">Route *</label>
+                    <input type="text" id="busRoute" required placeholder="e.g., Downtown - Airport">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="busTime">Timing *</label>
+                    <input type="text" id="busTime" required placeholder="e.g., 5 min, 10:30 AM, Every 15 min">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" class="btn-secondary" id="cancelBus">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="emergencyModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📞 Emergency Number</h2>
+                <button class="modal-close" id="closeEmergencyModal">×</button>
+            </div>
+            <form id="emergencyForm" novalidate>
+                <input type="hidden" id="emergencyId">
+                <div class="form-group">
+                    <label for="emergencyService">Service Name *</label>
+                    <input type="text" id="emergencyService" required placeholder="e.g., Police, Fire, Ambulance">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="emergencyNumber">Phone Number *</label>
+                    <input type="tel" id="emergencyNumber" required placeholder="e.g., 911">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="emergencyAddress">Address</label>
+                    <input type="text" id="emergencyAddress" placeholder="e.g., 123 Main St, City">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="emergencyMap">Map Link (Google Maps)</label>
+                    <input type="url" id="emergencyMap" placeholder="https://maps.google.com/...">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Save</button>
+                    <button type="button" class="btn-secondary" id="cancelEmergency">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="adminModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>👥 Add Admin User</h2>
+                <button class="modal-close" id="closeAdminModal">×</button>
+            </div>
+            <form id="adminForm" novalidate>
+                <div class="form-group">
+                    <label for="adminName">Name *</label>
+                    <input type="text" id="adminName" required>
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="adminPhone">Phone Number</label>
+                    <input type="tel" id="adminPhone" pattern="[0-9]{10}" maxlength="10" placeholder="Optional">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password *</label>
+                    <input type="password" id="adminPassword" required minlength="6">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Create Admin</button>
+                    <button type="button" class="btn-secondary" id="cancelAdmin">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="userEditModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Edit User</h2>
+                <button class="modal-close" id="closeUserEditModal">×</button>
+            </div>
+            <form id="userEditForm" novalidate>
+                <input type="hidden" id="editUserName">
+                <div class="form-group">
+                    <label for="editUserPhone">Phone Number *</label>
+                    <input type="tel" id="editUserPhone" required pattern="[0-9]{10}" maxlength="10">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="editUserPassword">New Password (leave blank to keep current)</label>
+                    <input type="password" id="editUserPassword" minlength="6">
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Update User</button>
+                    <button type="button" class="btn-secondary" id="cancelUserEdit">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>✏️ Edit Issue</h2>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <form id="editForm" novalidate>
+                <input type="hidden" id="editId">
+                <div class="form-group">
+                    <label for="editCategory">Category *</label>
+                    <select id="editCategory" required>
+                        <option value="pothole">Pothole</option>
+                        <option value="streetlight">Street Light</option>
+                        <option value="traffic">Traffic Signal</option>
+                        <option value="waste">Waste Collection</option>
+                        <option value="other">Other</option>
+                    </select>
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="editLocation">Location *</label>
+                    <input type="text" id="editLocation" required>
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-group">
+                    <label for="editDescription">Description *</label>
+                    <textarea id="editDescription" rows="4" required minlength="10"></textarea>
+                    <span class="error-message"></span>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Update Issue</button>
+                    <button type="button" class="btn-secondary" id="cancelEdit">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

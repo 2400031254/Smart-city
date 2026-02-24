@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+        }
+        .login-type-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .login-type-btn {
+            flex: 1;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+        }
+        .login-type-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        .captcha-container {
+            display: flex;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .captcha-code {
+            flex: 1;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 0.5rem;
+        }
+        .captcha-refresh {
+            padding: 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button[type="submit"] {
+            width: 100%;
+            padding: 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Login Test</h2>
+        
+        <div class="login-type-selector">
+            <div class="login-type-btn active" id="userBtn">
+                <div>👤</div>
+                <div>User</div>
+            </div>
+            <div class="login-type-btn" id="adminBtn">
+                <div>🔒</div>
+                <div>Admin</div>
+            </div>
+        </div>
+        
+        <form id="testForm">
+            <input type="hidden" id="roleInput" value="user">
+            <input type="text" id="username" placeholder="Username" required>
+            <input type="password" id="password" placeholder="Password" required>
+            
+            <div class="captcha-container">
+                <div class="captcha-code" id="captchaDisplay">LOADING</div>
+                <button type="button" class="captcha-refresh" id="refreshBtn">🔄</button>
+            </div>
+            <input type="text" id="captchaInput" placeholder="Enter CAPTCHA" required>
+            
+            <button type="submit">Login</button>
+        </form>
+        
+        <div id="result" style="margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 5px;"></div>
+    </div>
+
+    <script>
+        let currentCaptcha = '';
+        
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let captcha = '';
+            for (let i = 0; i < 6; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentCaptcha = captcha;
+            document.getElementById('captchaDisplay').textContent = captcha;
+            console.log('Generated CAPTCHA:', captcha);
+        }
+        
+        document.getElementById('userBtn').addEventListener('click', function() {
+            this.classList.add('active');
+            document.getElementById('adminBtn').classList.remove('active');
+            document.getElementById('roleInput').value = 'user';
+            console.log('User selected');
+        });
+        
+        document.getElementById('adminBtn').addEventListener('click', function() {
+            this.classList.add('active');
+            document.getElementById('userBtn').classList.remove('active');
+            document.getElementById('roleInput').value = 'admin';
+            console.log('Admin selected');
+        });
+        
+        document.getElementById('refreshBtn').addEventListener('click', function() {
+            generateCaptcha();
+        });
+        
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const role = document.getElementById('roleInput').value;
+            const username = document.getElementById('username').value;
+            const captchaInput = document.getElementById('captchaInput').value.toUpperCase();
+            
+            if (captchaInput === currentCaptcha) {
+                document.getElementById('result').innerHTML = `<strong>Success!</strong><br>Role: ${role}<br>Username: ${username}`;
+                document.getElementById('result').style.background = '#d4edda';
+            } else {
+                document.getElementById('result').innerHTML = '<strong>Error!</strong> Invalid CAPTCHA';
+                document.getElementById('result').style.background = '#f8d7da';
+                generateCaptcha();
+            }
+        });
+        
+        // Generate initial CAPTCHA
+        generateCaptcha();
+    </script>
+</body>
+</html>

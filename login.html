@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth-styles.css">
+</head>
+<body>
+    <div id="authScreen" class="auth-screen">
+        <div class="auth-right">
+            <div class="auth-container">
+                <div class="auth-header">
+                    <h1>SMART CITY</h1>
+                    <p>Intelligent Urban Management System</p>
+                </div>
+
+                <div id="loginForm" class="auth-form active">
+                    <h2>Login</h2>
+                    
+                    <div class="login-type-selector">
+                        <div class="login-type-btn active" id="userLoginBtn" onclick="selectUserLogin()">
+                            <span class="icon">👤</span>
+                            <span class="label">User Login</span>
+                        </div>
+                        <div class="login-type-btn" id="adminLoginBtn" onclick="selectAdminLogin()">
+                            <span class="icon">🔒</span>
+                            <span class="label">Admin Login</span>
+                        </div>
+                    </div>
+                    
+                    <form id="loginFormElement" onsubmit="return handleLogin(event)">
+                        <input type="hidden" id="loginRole" value="user">
+                        <div class="form-group">
+                            <label for="loginName">Name (Username)</label>
+                            <input type="text" id="loginName" required>
+                            <span class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <input type="password" id="loginPassword" required>
+                            <span class="error-message"></span>
+                        </div>
+                        <div class="form-group">
+                            <label for="captcha">Enter CAPTCHA *</label>
+                            <div class="captcha-container">
+                                <div class="captcha-code" id="captchaCode">ABCD12</div>
+                                <button type="button" class="captcha-refresh" onclick="generateCaptcha()">🔄</button>
+                            </div>
+                            <input type="text" id="captchaInput" required placeholder="Enter code above">
+                            <span class="error-message"></span>
+                        </div>
+                        <button type="submit" class="btn-primary">Login</button>
+                    </form>
+                    <p class="demo-credentials">
+                        <strong>🔑 Demo Credentials</strong><br>
+                        <small>
+                            <strong>Admin:</strong> srisanth / SASI@1234<br>
+                            <strong>User:</strong> Regular User / user123
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCaptcha = '';
+        
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let captcha = '';
+            for (let i = 0; i < 6; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            currentCaptcha = captcha;
+            document.getElementById('captchaCode').textContent = captcha;
+        }
+        
+        function selectUserLogin() {
+            document.getElementById('userLoginBtn').classList.add('active');
+            document.getElementById('adminLoginBtn').classList.remove('active');
+            document.getElementById('loginRole').value = 'user';
+        }
+        
+        function selectAdminLogin() {
+            document.getElementById('adminLoginBtn').classList.add('active');
+            document.getElementById('userLoginBtn').classList.remove('active');
+            document.getElementById('loginRole').value = 'admin';
+        }
+        
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('loginName').value;
+            const password = document.getElementById('loginPassword').value;
+            const role = document.getElementById('loginRole').value;
+            const captchaInput = document.getElementById('captchaInput').value.toUpperCase();
+            
+            if (captchaInput !== currentCaptcha) {
+                alert('Invalid CAPTCHA');
+                generateCaptcha();
+                return false;
+            }
+            
+            const users = [
+                { name: 'srisanth', password: 'SASI@1234', role: 'admin' },
+                { name: 'Admin User', password: 'admin123', role: 'admin' },
+                { name: 'Regular User', password: 'user123', role: 'user' }
+            ];
+            
+            const user = users.find(u => u.name === name && u.password === password && u.role === role);
+            
+            if (user) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                window.location.href = 'index.html';
+            } else {
+                alert('Invalid credentials for selected login type');
+                generateCaptcha();
+            }
+            
+            return false;
+        }
+        
+        // Generate CAPTCHA on page load
+        generateCaptcha();
+    </script>
+</body>
+</html>
