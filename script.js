@@ -1110,9 +1110,9 @@ navLinks.forEach(link => {
 function renderUserEmergencyNumbers() {
     const userEmergencyList = document.getElementById('userEmergencyList');
     const numbers = storage.local.get('emergencyNumbers', [
-        { id: 1, service: 'Police', number: '911', address: '', mapLink: '' },
-        { id: 2, service: 'Fire Department', number: '911', address: '', mapLink: '' },
-        { id: 3, service: 'Ambulance', number: '911', address: '', mapLink: '' },
+        { id: 1, service: 'Police', number: '100', address: '', mapLink: '' },
+        { id: 2, service: 'Fire Department', number: '112', address: '', mapLink: '' },
+        { id: 3, service: 'Ambulance', number: '108', address: '', mapLink: '' },
         { id: 4, service: 'City Hall', number: '311', address: '', mapLink: '' }
     ]);
     
@@ -1248,9 +1248,9 @@ window.adminDeleteIssue = function(id) {
 function renderEmergencyNumbers() {
     const emergencyList = document.getElementById('emergencyList');
     const numbers = storage.local.get('emergencyNumbers', [
-        { id: 1, service: 'Police', number: '911', address: '', mapLink: '' },
-        { id: 2, service: 'Fire Department', number: '911', address: '', mapLink: '' },
-        { id: 3, service: 'Ambulance', number: '911', address: '', mapLink: '' },
+        { id: 1, service: 'Police', number: '100', address: '', mapLink: '' },
+        { id: 2, service: 'Fire Department', number: '112', address: '', mapLink: '' },
+        { id: 3, service: 'Ambulance', number: '108', address: '', mapLink: '' },
         { id: 4, service: 'City Hall', number: '311', address: '', mapLink: '' }
     ]);
     
