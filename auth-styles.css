@@ -139,8 +139,8 @@
 
 .captcha-code {
     flex: 1;
-    background: #ffffff;
-    color: #000000;
+    background: #ffffff !important;
+    color: #000000 !important;
     padding: 1rem;
     border-radius: 10px;
     font-size: 2rem;
@@ -154,6 +154,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    opacity: 1 !important;
 }
 
 .captcha-refresh {
