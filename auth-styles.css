@@ -143,13 +143,17 @@
     color: #000000;
     padding: 1rem;
     border-radius: 10px;
-    font-size: 1.6rem;
-    font-weight: 800;
-    letter-spacing: 4px;
+    font-size: 2rem;
+    font-weight: 900;
+    letter-spacing: 8px;
     text-align: center;
     user-select: none;
     border: 2px solid #667eea;
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .captcha-refresh {
