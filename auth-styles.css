@@ -38,6 +38,34 @@
     width: 100%;
     max-width: 450px;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-container::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #667eea, #764ba2);
+    background-size: 400% 400%;
+    border-radius: 20px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    animation: glitterBorder 3s ease infinite;
+}
+
+.auth-container:hover::before {
+    opacity: 1;
+}
+
+@keyframes glitterBorder {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .auth-header {
@@ -76,9 +104,10 @@
 }
 
 .login-type-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
     border-color: rgba(255, 255, 255, 0.5);
     transform: translateY(-2px);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
 }
 
 .login-type-btn.active {
@@ -171,8 +200,12 @@
     color: white;
 }
 
-.form-group input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
 .form-group input:focus,
@@ -180,7 +213,8 @@
 .form-group textarea:focus {
     outline: none;
     border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
 }
 
 .error-message {
@@ -201,6 +235,33 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #667eea, #764ba2, #667eea, #764ba2);
+    background-size: 400% 400%;
+    border-radius: 10px;
+    z-index: -1;
+    opacity: 0;
+    animation: glitterButton 2s ease infinite;
+}
+
+.btn-primary:hover::before {
+    opacity: 1;
+}
+
+@keyframes glitterButton {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
 }
 
 .btn-primary:hover {
