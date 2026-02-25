@@ -1,0 +1,46 @@
+/* Border Glow Effect - Changes with Theme Color */
+input:hover,
+select:hover,
+textarea:hover,
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 8px var(--accent) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 10px var(--accent) !important;
+}
+
+.module-card:hover,
+.stat-card:hover,
+.issue-card:hover,
+.emergency-card:hover,
+.tourist-card:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 12px var(--accent) !important;
+}
+
+button:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.action-btn:hover {
+    box-shadow: 0 0 10px var(--accent) !important;
+}
+
+.login-type-btn:hover {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 10px var(--accent) !important;
+    background: rgba(102, 126, 234, 0.1) !important;
+}
+
+.auth-container:hover {
+    box-shadow: 0 0 15px var(--accent) !important;
+}
