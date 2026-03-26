@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart City - Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.3), transparent);
+            border-radius: 50%;
+            top: -250px;
+            right: -250px;
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(217, 70, 239, 0.3), transparent);
+            border-radius: 50%;
+            bottom: -200px;
+            left: -200px;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+        
+        .auth-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(30px);
+            border-radius: 32px;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+            max-width: 420px;
+            width: 100%;
+            padding: 40px 35px;
+            animation: slideUp 0.6s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .logo-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .logo h1 {
+            font-size: 1.9rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6, #d946ef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .logo p {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 4px;
+            font-weight: 500;
+        }
+        
+        .tab-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            padding: 5px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) inset;
+        }
+        
+        .tab-btn {
+            flex: 1;
+            padding: 11px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .tab-btn.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35), 0 2px 8px rgba(139, 92, 246, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .role-card {
+            padding: 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .role-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .role-card:hover::before {
+            left: 100%;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-4px);
+            border-color: #6366f1;
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+        }
+        
+        .role-card.active {
+            border-color: #6366f1;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.25), 0 0 0 1px rgba(99, 102, 241, 0.1) inset;
+            transform: translateY(-2px);
+        }
+        
+        .role-card .icon {
+            font-size: 2rem;
+            margin-bottom: 6px;
+        }
+        
+        .role-card .label {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+        
+        .form-section {
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .input-group {
+            margin-bottom: 14px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.8rem;
+            letter-spacing: 0.2px;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-wrapper input {
+            width: 100%;
+            padding: 10px 35px 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Poppins', sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+        }
+        
+        .input-wrapper input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .input-wrapper input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .input-wrapper input:hover {
+            border-color: #cbd5e1;
+            background: #ffffff;
+        }
+        
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background: #ffffff;
+        }
+        
+        .input-wrapper input.error {
+            border-color: #ef4444;
+        }
+        
+        .input-wrapper input.success {
+            border-color: #10b981;
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.2rem;
+        }
+        
+        .error-msg {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
+        .error-msg.show {
+            display: block;
+        }
+        
+        .captcha-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .captcha-display {
+            flex: 1;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            padding: 11px;
+            border-radius: 10px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 8px;
+            user-select: none;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .captcha-display::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        
+        .captcha-refresh {
+            width: 44px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+        
+        .captcha-refresh:hover {
+            background: linear-gradient(135deg, #8b5cf6, #d946ef);
+            transform: rotate(180deg);
+            box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 11px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-top: 6px;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .submit-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(99, 102, 241, 0.45);
+            background: linear-gradient(135deg, #8b5cf6, #d946ef);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
+        }
+        
+        .switch-text {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        
+        .switch-text a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .switch-text a:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert.success {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border-left: 4px solid #10b981;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+        
+        .alert.error {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="logo">
+            <div class="logo-icon">🏙️</div>
+            <h1>Smart City</h1>
+            <p>Intelligent Urban Management</p>
+        </div>
+        
+        <div class="tab-selector">
+            <button class="tab-btn active" data-tab="login">Login</button>
+            <button class="tab-btn" data-tab="signup">Sign Up</button>
+        </div>
+        
+        <div id="alertBox" class="alert"></div>
+        
+        <!-- Login Form -->
+        <div class="form-section active" id="loginSection">
+            <div class="role-selector">
+                <div class="role-card active" data-role="user">
+                    <div class="icon">👤</div>
+                    <div class="label">User</div>
+                </div>
+                <div class="role-card" data-role="admin">
+                    <div class="icon">🔒</div>
+                    <div class="label">Admin</div>
+                </div>
+            </div>
+            
+            <form id="loginForm">
+                <input type="hidden" id="loginRole" value="user">
+                
+                <div class="input-group">
+                    <label>Username</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="loginUsername" placeholder="Enter your username" required>
+                        <span class="input-icon">👤</span>
+                    </div>
+                    <div class="error-msg" id="loginUsernameError"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        <span class="input-icon">🔒</span>
+                    </div>
+                    <div class="error-msg" id="loginPasswordError"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label>CAPTCHA</label>
+                    <div class="captcha-box">
+                        <div class="captcha-display" id="loginCaptcha">ABCD12</div>
+                        <button type="button" class="captcha-refresh" id="loginRefresh">🔄</button>
+                    </div>
+                    <div class="input-wrapper">
+                        <input type="text" id="loginCaptchaInput" placeholder="Enter CAPTCHA" required>
+                        <span class="input-icon">✓</span>
+                    </div>
+                    <div class="error-msg" id="loginCaptchaError"></div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Login</button>
+            </form>
+        </div>
+        
+        <!-- Signup Form -->
+        <div class="form-section" id="signupSection">
+            <div class="role-selector">
+                <div class="role-card active" data-role="user">
+                    <div class="icon">👤</div>
+                    <div class="label">User</div>
+                </div>
+                <div class="role-card" data-role="admin">
+                    <div class="icon">🔒</div>
+                    <div class="label">Admin</div>
+                </div>
+            </div>
+            
+            <form id="signupForm">
+                <input type="hidden" id="signupRole" value="user">
+                
+                <div class="input-group">
+                    <label>Full Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" id="signupName" placeholder="Enter your full name" required>
+                        <span class="input-icon">👤</span>
+                    </div>
+                    <div class="error-msg" id="signupNameError"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Phone Number</label>
+                    <div class="input-wrapper">
+                        <input type="tel" id="signupPhone" placeholder="10 digit number" maxlength="10" required>
+                        <span class="input-icon">📱</span>
+                    </div>
+                    <div class="error-msg" id="signupPhoneError"></div>
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signupPassword" placeholder="Min 6 characters" required>
+                        <span class="input-icon">🔒</span>
+                    </div>
+                    <div class="error-msg" id="signupPasswordError"></div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const defaultUsers = [
+            { name: 'nikhil', password: 'nikhil2006', role: 'admin', phone: '0000000000' },
+            { name: 'nikhil', password: 'nikhil2006', role: 'user', phone: '0000000000' }
+        ];
+        
+        // Initialize default credentials if localStorage is empty
+        if (!localStorage.getItem('users')) {
+            localStorage.setItem('users', JSON.stringify(defaultUsers));
+        }
+        
+        let loginCaptcha = '';
+        
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+                document.getElementById(btn.dataset.tab + 'Section').classList.add('active');
+                hideAlert();
+            });
+        });
+        
+        // Role selection for login
+        document.querySelectorAll('#loginSection .role-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#loginSection .role-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                document.getElementById('loginRole').value = card.dataset.role;
+            });
+        });
+        
+        // Role selection for signup
+        document.querySelectorAll('#signupSection .role-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#signupSection .role-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                document.getElementById('signupRole').value = card.dataset.role;
+            });
+        });
+        
+        // Generate CAPTCHA
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            let captcha = '';
+            for (let i = 0; i < 6; i++) {
+                captcha += chars[Math.floor(Math.random() * chars.length)];
+            }
+            loginCaptcha = captcha;
+            document.getElementById('loginCaptcha').textContent = captcha;
+        }
+        
+        document.getElementById('loginRefresh').addEventListener('click', generateCaptcha);
+        
+        // Alert functions
+        function showAlert(message, type) {
+            const alert = document.getElementById('alertBox');
+            alert.textContent = message;
+            alert.className = `alert ${type} show`;
+        }
+        
+        function hideAlert() {
+            document.getElementById('alertBox').classList.remove('show');
+        }
+        
+        // Validation
+        function showError(fieldId, message) {
+            const input = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + 'Error');
+            input.classList.add('error');
+            input.classList.remove('success');
+            error.textContent = message;
+            error.classList.add('show');
+        }
+        
+        function showSuccess(fieldId) {
+            const input = document.getElementById(fieldId);
+            const error = document.getElementById(fieldId + 'Error');
+            input.classList.remove('error');
+            input.classList.add('success');
+            error.classList.remove('show');
+        }
+        
+        function clearErrors() {
+            document.querySelectorAll('input').forEach(input => {
+                input.classList.remove('error', 'success');
+            });
+            document.querySelectorAll('.error-msg').forEach(msg => {
+                msg.classList.remove('show');
+            });
+        }
+        
+        // Get users
+        function getUsers() {
+            const stored = JSON.parse(localStorage.getItem('users') || '[]');
+            return stored.concat(defaultUsers.filter(du => !stored.find(s => s.name === du.name && s.role === du.role)));
+        }
+        
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearErrors();
+            hideAlert();
+            
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const captcha = document.getElementById('loginCaptchaInput').value.toUpperCase();
+            const role = document.getElementById('loginRole').value;
+            
+            let valid = true;
+            
+            if (!username) {
+                showError('loginUsername', 'Username is required');
+                valid = false;
+            } else {
+                showSuccess('loginUsername');
+            }
+            
+            if (!password) {
+                showError('loginPassword', 'Password is required');
+                valid = false;
+            } else {
+                showSuccess('loginPassword');
+            }
+            
+            if (captcha !== loginCaptcha) {
+                showError('loginCaptchaInput', 'Invalid CAPTCHA');
+                generateCaptcha();
+                valid = false;
+            } else {
+                showSuccess('loginCaptchaInput');
+            }
+            
+            if (!valid) return;
+            
+            const user = getUsers().find(u => u.name === username && u.password === password && u.role === role);
+            
+            if (user) {
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showAlert('✅ Login successful! Redirecting...', 'success');
+                setTimeout(() => window.location.href = 'index.html', 1500);
+            } else {
+                showAlert('❌ Invalid credentials for selected role', 'error');
+                generateCaptcha();
+            }
+        });
+        
+        // Signup
+        document.getElementById('signupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            clearErrors();
+            hideAlert();
+            
+            const name = document.getElementById('signupName').value.trim();
+            const phone = document.getElementById('signupPhone').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const role = document.getElementById('signupRole').value;
+            
+            let valid = true;
+            
+            if (name.length < 2) {
+                showError('signupName', 'Name must be at least 2 characters');
+                valid = false;
+            } else {
+                showSuccess('signupName');
+            }
+            
+            if (!/^[0-9]{10}$/.test(phone)) {
+                showError('signupPhone', 'Phone must be 10 digits');
+                valid = false;
+            } else {
+                showSuccess('signupPhone');
+            }
+            
+            if (password.length < 6) {
+                showError('signupPassword', 'Password must be at least 6 characters');
+                valid = false;
+            } else {
+                showSuccess('signupPassword');
+            }
+            
+            if (!valid) return;
+            
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            if (users.find(u => u.name === name && u.role === role)) {
+                showAlert('❌ Username already exists for this role', 'error');
+                return;
+            }
+            
+            users.push({ name, phone, password, role, registeredAt: new Date().toISOString() });
+            localStorage.setItem('users', JSON.stringify(users));
+            
+            showAlert('✅ Account created! Switching to login...', 'success');
+            document.getElementById('signupForm').reset();
+            setTimeout(() => {
+                document.querySelector('[data-tab="login"]').click();
+            }, 2000);
+        });
+        
+        generateCaptcha();
+    </script>
+</body>
+</html>

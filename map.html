@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+        .report-popup { text-align: center; }
+        .report-popup button { 
+            margin: 5px; 
+            padding: 10px 20px; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 600;
+        }
+        .report-btn { background: #3b82f6; color: white; }
+        .cancel-btn { background: #e5e7eb; color: #374151; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        var map = L.map('map').setView([40.7128, -74.0060], 13);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+        
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lon = position.coords.longitude;
+                map.setView([lat, lon], 15);
+                L.marker([lat, lon]).addTo(map).bindPopup('Your Location').openPopup();
+            });
+        }
+        
+        map.on('click', function(e) {
+            var popup = L.popup()
+                .setLatLng(e.latlng)
+                .setContent('<div class="report-popup"><h3>📍 Report Issue Here</h3><p>Click below to report an issue at this location</p><button class="report-btn" onclick="reportIssue()">📝 Report Issue</button><button class="cancel-btn" onclick="map.closePopup()">Cancel</button></div>')
+                .openOn(map);
+        });
+        
+        function reportIssue() {
+            window.parent.postMessage('reportIssue', '*');
+        }
+    </script>
+</body>
+</html>

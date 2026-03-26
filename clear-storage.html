@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Clear Storage</title>
-</head>
+<head><title>Clear Storage</title></head>
 <body>
-    <h1>Storage Cleared!</h1>
-    <p>Click <a href="index.html">here</a> to go back to login.</p>
-    <script>
-        localStorage.clear();
-        sessionStorage.clear();
-        alert('Storage cleared! Old credentials removed.');
-    </script>
+<h1>Clearing localStorage...</h1>
+<script>
+localStorage.clear();
+sessionStorage.clear();
+document.body.innerHTML = '<h1 style="color: green;">✅ Storage Cleared!</h1><p>Redirecting to login...</p>';
+setTimeout(() => window.location.href = 'index.html', 2000);
+</script>
 </body>
 </html>
