@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src *; connect-src 'self' https://api.openaq.org https://api.open-meteo.com https://api.bigdatacloud.net https://nominatim.openstreetmap.org;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src *; connect-src 'self' http://localhost:3000 https://api.openaq.org https://api.open-meteo.com https://api.bigdatacloud.net https://nominatim.openstreetmap.org;">
     <title>Smart City Dashboard</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="auth-styles.css">
@@ -320,19 +320,39 @@
         </div>
 
         <div id="tourists" class="page">
-            <section class="hero">
-                <h2>Famous Places</h2>
-                <p>Explore famous tourist destinations in the city</p>
-            </section>
-            
-            <div style="max-width: 500px; margin: -1.5rem auto 2rem; position: relative; z-index: 99999;">
-                <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 1.1rem; z-index:2;">🔍</span>
-                <input type="text" id="searchPlaces" placeholder="Search famous places..." autocomplete="off" style="width: 100%; padding: 0.85rem 1rem 0.85rem 2.8rem; border: 2px solid #e2e8f0; border-radius: 25px; font-size: 0.95rem; background: #ffffff; color: #1e293b; outline: none; transition: all 0.3s ease; box-shadow: 0 4px 20px rgba(0,0,0,0.12);" oninput="searchPlaces(this.value); showSuggestions(this.value)" onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 4px 20px rgba(99,102,241,0.25)'; showSuggestions(this.value)" onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.12)'; setTimeout(()=>hideSuggestions(),200)">
-                <div id="placesSuggestions" style="display:none; position:absolute; top:calc(100% + 6px); left:0; right:0; background:#ffffff; border-radius:16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2), 0 4px 20px rgba(99,102,241,0.15); z-index:99999; overflow:hidden; border:2px solid #e2e8f0; max-height: 320px; overflow-y: auto;"></div>
+            <!-- Hero Banner -->
+            <div class="places-hero">
+                <div class="places-hero-bg"></div>
+                <div class="places-hero-content">
+                    <div class="places-hero-badge">🏛️ Explore Vijayawada</div>
+                    <h1>Famous Places</h1>
+                    <p>Discover the most iconic destinations, temples, and landmarks</p>
+                    <div class="places-hero-stats">
+                        <div class="places-hero-stat"><span id="placesCount">7</span><small>Places</small></div>
+                        <div class="places-hero-stat"><span>4.8★</span><small>Avg Rating</small></div>
+                        <div class="places-hero-stat"><span>Free</span><small>Entry</small></div>
+                    </div>
+                </div>
             </div>
-            <div class="modules-grid">
-                <div id="touristPlacesList" class="tourist-grid"></div>
+
+            <!-- Search + Filter Bar -->
+            <div class="places-toolbar">
+                <div class="places-search-wrap">
+                    <span>🔍</span>
+                    <input type="text" id="searchPlaces" placeholder="Search places, landmarks..." autocomplete="off"
+                        oninput="searchPlaces(this.value); showSuggestions(this.value)"
+                        onfocus="showSuggestions(this.value)"
+                        onblur="setTimeout(()=>hideSuggestions(),200)">
+                    <div id="placesSuggestions" class="places-suggestions"></div>
+                </div>
+                <div class="places-view-toggle">
+                    <button class="places-view-btn active" id="viewGrid" onclick="setPlacesView('grid')">⊞ Grid</button>
+                    <button class="places-view-btn" id="viewList" onclick="setPlacesView('list')">☰ List</button>
+                </div>
             </div>
+
+            <!-- Cards Grid -->
+            <div id="touristPlacesList" class="tourist-grid"></div>
         </div>
 
         <div id="citymap" class="page">
@@ -697,6 +717,7 @@
                                 <option value="streetlight">Street Light</option>
                                 <option value="traffic">Traffic Signal</option>
                                 <option value="waste">Waste Collection</option>
+                                <option value="water">Water Pipe</option>
                                 <option value="other">Other</option>
                             </select>
                             <select id="filterPriority" onchange="renderAdminPanel()">

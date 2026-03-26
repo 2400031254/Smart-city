@@ -7,7 +7,7 @@ const path = require('path');
 
 const app = express();
 const PORT = 3000;
-const JWT_SECRET = 'smart-city-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || 'smart-city-secret-key-2024';
 
 app.use(cors());
 app.use(express.json());
@@ -91,18 +91,22 @@ const auth = (req, res, next) => {
 // Auth Routes
 app.post('/api/register', async (req, res) => {
     const { name, phone, password, role } = req.body;
+    if (!name || !password) return res.status(400).json({ error: 'Name and password required' });
+    if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (phone && !/^[0-9]{10}$/.test(phone)) return res.status(400).json({ error: 'Phone must be 10 digits' });
     const hashedPassword = await bcrypt.hash(password, 10);
     db.run('INSERT INTO users (name, phone, password, role) VALUES (?, ?, ?, ?)',
-        [name, phone, hashedPassword, role || 'user'],
+        [name.trim(), phone, hashedPassword, role === 'admin' ? 'admin' : 'user'],
         function(err) {
-            if (err) return res.status(400).json({ error: 'User exists' });
+            if (err) return res.status(400).json({ error: 'User already exists' });
             res.json({ message: 'User created', id: this.lastID });
         });
 });
 
 app.post('/api/login', (req, res) => {
     const { name, password, role } = req.body;
-    db.get('SELECT * FROM users WHERE name = ? AND role = ?', [name, role], async (err, user) => {
+    if (!name || !password) return res.status(400).json({ error: 'Name and password required' });
+    db.get('SELECT * FROM users WHERE name = ? AND role = ?', [name, role || 'user'], async (err, user) => {
         if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
@@ -125,8 +129,12 @@ app.get('/api/issues', auth, (req, res) => {
 
 app.post('/api/issues', auth, (req, res) => {
     const { name, phone, category, location, description } = req.body;
+    if (!name || !phone || !category || !location || !description)
+        return res.status(400).json({ error: 'All fields are required' });
+    if (!/^[0-9]{10}$/.test(phone)) return res.status(400).json({ error: 'Phone must be 10 digits' });
+    if (description.trim().length < 10) return res.status(400).json({ error: 'Description too short' });
     db.run('INSERT INTO issues (user_name, name, phone, category, location, description) VALUES (?, ?, ?, ?, ?, ?)',
-        [req.user.name, name, phone, category, location, description],
+        [req.user.name, name.trim(), phone, category, location.trim(), description.trim()],
         function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, message: 'Issue reported' });

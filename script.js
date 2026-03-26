@@ -486,6 +486,7 @@ function validateField(field) {
 }
 
 form.querySelectorAll('input, select, textarea').forEach(field => {
+    if (field.type === 'file') return;
     field.addEventListener('blur', () => validateField(field));
     field.addEventListener('input', () => {
         if (field.classList.contains('error')) {
@@ -517,6 +518,9 @@ form.addEventListener('submit', (e) => {
     
     let isValid = true;
     form.querySelectorAll('input, select, textarea').forEach(field => {
+        if (field.type === 'file') return;
+        const stepContent = field.closest('.report-step-content');
+        if (stepContent && !stepContent.classList.contains('active')) return;
         if (!validateField(field)) isValid = false;
     });
     
@@ -560,8 +564,10 @@ form.addEventListener('submit', (e) => {
 
 form.addEventListener('reset', () => {
     form.querySelectorAll('input, select, textarea').forEach(field => {
+        if (field.type === 'file') return;
         field.classList.remove('success', 'error');
-        field.parentElement.querySelector('.error-message').textContent = '';
+        const errorSpan = field.parentElement.querySelector('.error-message');
+        if (errorSpan) errorSpan.textContent = '';
     });
 });
 
@@ -716,69 +722,85 @@ window.updateParkingSpots = function() {
 function renderTouristPlaces() {
     const touristPlacesList = document.getElementById('touristPlacesList');
     const places = storage.local.get('touristPlaces', []);
-    
+
+    const countEl = document.getElementById('placesCount');
+    if (countEl) countEl.textContent = places.length;
+
     if (places.length === 0) {
-        touristPlacesList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 3rem;"><h3>No tourist places available</h3><p>Check back later for amazing destinations!</p></div>';
+        touristPlacesList.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:4rem 2rem;"><div style="font-size:3rem;margin-bottom:1rem;">🏛️</div><h3 style="color:var(--text-primary);">No places yet</h3><p style="color:var(--text-secondary);">Admin can add tourist places from the Admin panel.</p></div>';
         return;
     }
-    
-    touristPlacesList.innerHTML = places.map(place => `
+
+    const categoryLabels = { pothole:'Road', streetlight:'Light', traffic:'Traffic', waste:'Waste', water:'Water', other:'Other',
+        temple:'Temple', park:'Park', river:'River', monument:'Monument', island:'Island', cave:'Cave', hill:'Hill' };
+
+    touristPlacesList.innerHTML = places.map(place => {
+        const badge = place.icon === '🛕' ? 'Temple' : place.icon === '🌊' ? 'Waterfront' : place.icon === '🏞️' ? 'Nature' : place.icon === '🗿' ? 'Heritage' : place.icon === '🌄' ? 'Viewpoint' : 'Landmark';
+        return `
         <div class="tourist-card" data-place-name="${sanitizeHTML(place.name.toLowerCase())}" data-place-desc="${sanitizeHTML(place.description.toLowerCase())}" data-place-addr="${sanitizeHTML(place.address.toLowerCase())}" onclick="showPlaceDetails(${place.id})">
-            <img src="${sanitizeHTML(place.image)}" alt="${sanitizeHTML(place.name)}" onerror="this.src='https://via.placeholder.com/800x400?text=${encodeURIComponent(place.name)}'" style="width: 100%; height: 200px; object-fit: cover; border-radius: 16px 16px 0 0; cursor: pointer;">
-            <div class="tourist-card-header">
-                <h3>${place.icon} ${sanitizeHTML(place.name)}</h3>
+            <div class="tourist-card-img-wrap">
+                <img src="${sanitizeHTML(place.image)}" alt="${sanitizeHTML(place.name)}" onerror="this.src='https://via.placeholder.com/600x300?text=${encodeURIComponent(place.name)}'">
+                <div class="tourist-card-overlay"></div>
+                <span class="tourist-card-badge">${badge}</span>
+                <span class="tourist-card-icon">${place.icon || '🏛️'}</span>
             </div>
             <div class="tourist-card-body">
-                <p>${sanitizeHTML(place.description)}</p>
-                <div class="tourist-card-address">
-                    <span>📍</span>
-                    <span>${sanitizeHTML(place.address)}</span>
-                </div>
-                <button class="btn-primary" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}', '_blank')" style="margin-top: 1rem; width: 100%;">🗺️ Get Directions</button>
+                <div class="tourist-card-title">${sanitizeHTML(place.name)}</div>
+                <div class="tourist-card-desc">${sanitizeHTML(place.description)}</div>
+                <div class="tourist-card-address"><span>📍</span><span>${sanitizeHTML(place.address)}</span></div>
             </div>
-        </div>
-    `).join('');
+            <div class="tourist-card-footer">
+                <button class="tourist-card-btn primary" onclick="event.stopPropagation(); showPlaceDetails(${place.id})">🔍 Explore</button>
+                <button class="tourist-card-btn secondary" onclick="event.stopPropagation(); window.open('https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(place.address)}','_blank')">🗺️ Directions</button>
+            </div>
+        </div>`;
+    }).join('');
 }
+
+window.setPlacesView = function(view) {
+    const grid = document.getElementById('touristPlacesList');
+    const btnGrid = document.getElementById('viewGrid');
+    const btnList = document.getElementById('viewList');
+    if (!grid) return;
+    if (view === 'list') {
+        grid.classList.add('list-view');
+        btnList.classList.add('active');
+        btnGrid.classList.remove('active');
+    } else {
+        grid.classList.remove('list-view');
+        btnGrid.classList.add('active');
+        btnList.classList.remove('active');
+    }
+};
 
 window.searchPlaces = function(searchText) {
     const cards = document.querySelectorAll('.tourist-card');
     const search = searchText.toLowerCase().trim();
-    
+
     if (!search) {
-        cards.forEach(card => {
-            card.style.display = 'block';
-            card.style.opacity = '1';
-            card.style.transform = 'scale(1)';
-        });
+        cards.forEach(card => { card.style.display = ''; });
         const noResult = document.getElementById('noSearchResult');
         if (noResult) noResult.remove();
         return;
     }
-    
+
     let found = 0;
     cards.forEach(card => {
-        const placeName = card.getAttribute('data-place-name') || '';
-        const placeDesc = card.getAttribute('data-place-desc') || '';
-        const placeAddr = card.getAttribute('data-place-addr') || '';
-        const matches = placeName.includes(search) || placeDesc.includes(search) || placeAddr.includes(search);
-        if (matches) {
-            card.style.display = 'block';
-            card.style.opacity = '1';
-            card.style.transform = 'scale(1)';
-            found++;
-        } else {
-            card.style.display = 'none';
-        }
+        const matches =
+            (card.getAttribute('data-place-name') || '').includes(search) ||
+            (card.getAttribute('data-place-desc') || '').includes(search) ||
+            (card.getAttribute('data-place-addr') || '').includes(search);
+        card.style.display = matches ? '' : 'none';
+        if (matches) found++;
     });
 
     const existing = document.getElementById('noSearchResult');
     if (existing) existing.remove();
-
     if (found === 0) {
         const noResult = document.createElement('div');
         noResult.id = 'noSearchResult';
-        noResult.style.cssText = 'grid-column:1/-1; text-align:center; padding:3rem; color:var(--text-secondary);';
-        noResult.innerHTML = `<div style="font-size:3rem;">🔍</div><h3>No places found for "${sanitizeHTML(searchText)}"</h3><p>Try searching for Kanaka Durga, Prakasam, Bhavani, Gandhi Hill...</p>`;
+        noResult.style.cssText = 'grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-secondary);';
+        noResult.innerHTML = `<div style="font-size:3rem;">🔍</div><h3>No places found for "${sanitizeHTML(searchText)}"</h3>`;
         document.getElementById('touristPlacesList').appendChild(noResult);
     }
 };
@@ -1163,6 +1185,7 @@ function getCategoryIcon(category) {
         streetlight: '💡',
         traffic: '🚦',
         waste: '🗑️',
+        water: '🚧',
         other: '📌'
     };
     return icons[category] || '📌';
@@ -1378,6 +1401,7 @@ navLinks.forEach(link => {
         const page = link.getAttribute('data-page');
         if (page === 'issues') {
             renderIssues();
+            storage.local.set('lastIssuesViewed_' + (storage.local.get('currentUser') || {}).name, Date.now());
         }
         if (page === 'services') {
             updateStorageStats();
@@ -1391,6 +1415,9 @@ navLinks.forEach(link => {
                 renderAdminPanel();
                 initAdminTabs();
             }, 100);
+        }
+        if (page === 'citymap') {
+            setTimeout(() => loadInteractiveMap(), 100);
         }
         if (page === 'report') {
             setTimeout(() => {
@@ -1949,15 +1976,6 @@ busForm.addEventListener('submit', (e) => {
     fetchTransport();
 });
 
-window.deleteUser = function(name) {
-    if (confirm(`Are you sure you want to delete user "${name}"?`)) {
-        let users = storage.local.get('users', []);
-        users = users.filter(u => u.name !== name);
-        storage.local.set('users', users);
-        renderRegularUsers();
-    }
-};
-
 const userEditModal = document.getElementById('userEditModal');
 const userEditForm = document.getElementById('userEditForm');
 const closeUserEditModal = document.getElementById('closeUserEditModal');
@@ -2348,47 +2366,6 @@ if (document.querySelector('.admin-tab')) {
 }
 
 
-// Interactive City Map
-function showIssuePopup(x, y) {
-    const existingPopup = document.querySelector('.map-marker-popup');
-    if (existingPopup) existingPopup.remove();
-    
-    const popup = document.createElement('div');
-    popup.className = 'map-marker-popup';
-    popup.style.left = `${x}px`;
-    popup.style.top = `${y}px`;
-    
-    popup.innerHTML = `
-        <h3>📍 Report Issue Here</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Click below to report an issue at this location</p>
-        <button class="btn-primary" onclick="reportIssueFromMap()">📝 Report Issue</button>
-        <button class="btn-secondary" onclick="this.closest('.map-marker-popup').remove()">Cancel</button>
-    `;
-    
-    document.getElementById('mapOverlay').appendChild(popup);
-}
-
-window.reportIssueFromMap = function() {
-    document.querySelector('.map-marker-popup')?.remove();
-    navigateTo('report');
-};
-
-navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        const page = link.getAttribute('data-page');
-        if (page === 'citymap') {
-            setTimeout(() => loadInteractiveMap(), 100);
-        }
-    });
-});
-
-
-// Interactive City Map
-
-
-// Interactive City Map with Google Maps
-
-
 // Enhanced Interactive City Map
 let currentLat = 16.5062;
 let currentLon = 80.6480;
@@ -2550,8 +2527,8 @@ function showIssuePopup(x, y) {
 }
 
 window.reportIssueFromMap = function() {
-    navigateTo('report');
     document.querySelector('.map-marker-popup')?.remove();
+    navigateTo('report');
 };
 
 window.searchMapLocation = function() {
@@ -2587,14 +2564,7 @@ document.getElementById('mapSearchInput')?.addEventListener('keypress', function
     }
 });
 
-navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        const page = link.getAttribute('data-page');
-        if (page === 'citymap') {
-            setTimeout(() => loadInteractiveMap(), 100);
-        }
-    });
-});
+
 
 
 // Global Search
