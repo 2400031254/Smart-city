@@ -43,13 +43,16 @@
                             <span class="error-message"></span>
                         </div>
                         <div class="form-group">
-                            <label for="captcha">Enter CAPTCHA *</label>
+                            <label for="captchaInput">Enter CAPTCHA *</label>
                             <div class="captcha-container">
-                                <div class="captcha-code" id="captchaCode">ABCD12</div>
-                                <button type="button" class="captcha-refresh" onclick="generateCaptcha()">🔄</button>
+                                <div class="captcha-img-wrap">
+                                    <img id="captchaImg" alt="CAPTCHA" style="height:60px;border-radius:8px;border:2px dashed #667eea;background:#f0f4ff;display:block;">
+                                    <div id="captchaLoading" style="height:60px;display:flex;align-items:center;justify-content:center;color:#667eea;font-size:0.85rem;display:none;">Loading...</div>
+                                </div>
+                                <button type="button" class="captcha-refresh" onclick="loadCaptcha()" title="Refresh CAPTCHA">🔄</button>
                             </div>
-                            <input type="text" id="captchaInput" required placeholder="Enter code above">
-                            <span class="error-message"></span>
+                            <input type="text" id="captchaInput" required placeholder="Enter the code shown above" autocomplete="off">
+                            <span class="error-message" id="captchaError"></span>
                         </div>
                         <button type="submit" class="btn-primary">Login</button>
                     </form>
@@ -66,65 +69,99 @@
     </div>
 
     <script>
-        let currentCaptcha = '';
-        
-        function generateCaptcha() {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-            let captcha = '';
-            for (let i = 0; i < 6; i++) {
-                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+        const API = 'http://localhost:3000';
+        let currentCaptchaId = '';
+
+        async function loadCaptcha() {
+            const img = document.getElementById('captchaImg');
+            const loading = document.getElementById('captchaLoading');
+            img.style.display = 'none';
+            loading.style.display = 'flex';
+            document.getElementById('captchaInput').value = '';
+            document.getElementById('captchaError').textContent = '';
+            try {
+                const res = await fetch(`${API}/api/captcha`);
+                if (!res.ok) throw new Error('Failed');
+                const data = await res.json();
+                currentCaptchaId = data.captchaId;
+                img.src = data.captchaImage;
+                img.style.display = 'block';
+                loading.style.display = 'none';
+            } catch (e) {
+                loading.textContent = '⚠️ Failed to load. Click 🔄';
+                loading.style.display = 'flex';
+                console.error('CAPTCHA load error:', e);
             }
-            currentCaptcha = captcha;
-            document.getElementById('captchaCode').textContent = captcha;
         }
-        
+
         function selectUserLogin() {
             document.getElementById('userLoginBtn').classList.add('active');
             document.getElementById('adminLoginBtn').classList.remove('active');
             document.getElementById('loginRole').value = 'user';
         }
-        
+
         function selectAdminLogin() {
             document.getElementById('adminLoginBtn').classList.add('active');
             document.getElementById('userLoginBtn').classList.remove('active');
             document.getElementById('loginRole').value = 'admin';
         }
-        
-        function handleLogin(event) {
+
+        async function handleLogin(event) {
             event.preventDefault();
-            
-            const name = document.getElementById('loginName').value;
+            const name = document.getElementById('loginName').value.trim();
             const password = document.getElementById('loginPassword').value;
             const role = document.getElementById('loginRole').value;
-            const captchaInput = document.getElementById('captchaInput').value.toUpperCase();
-            
-            if (captchaInput !== currentCaptcha) {
-                alert('Invalid CAPTCHA');
-                generateCaptcha();
+            const captchaInput = document.getElementById('captchaInput').value.trim();
+            const captchaError = document.getElementById('captchaError');
+
+            if (!captchaInput) {
+                captchaError.textContent = 'Please enter the CAPTCHA';
                 return false;
             }
-            
-            const users = [
-                { name: 'srisanth', password: 'SASI@1234', role: 'admin' },
-                { name: 'Admin User', password: 'admin123', role: 'admin' },
-                { name: 'Regular User', password: 'user123', role: 'user' }
-            ];
-            
-            const user = users.find(u => u.name === name && u.password === password && u.role === role);
-            
-            if (user) {
-                localStorage.setItem('currentUser', JSON.stringify(user));
-                window.location.href = 'index.html';
-            } else {
-                alert('Invalid credentials for selected login type');
-                generateCaptcha();
+
+            // Verify CAPTCHA with backend
+            try {
+                const verifyRes = await fetch(`${API}/api/captcha/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ captchaId: currentCaptchaId, captchaInput })
+                });
+                const { valid, reason } = await verifyRes.json();
+                if (!valid) {
+                    captchaError.textContent = reason === 'expired' ? 'CAPTCHA expired. Refreshed.' : 'Incorrect CAPTCHA. Try again.';
+                    loadCaptcha();
+                    return false;
+                }
+            } catch (e) {
+                captchaError.textContent = 'Could not verify CAPTCHA. Is the server running?';
+                return false;
             }
-            
+
+            // Attempt login via API
+            try {
+                const loginRes = await fetch(`${API}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, password, role })
+                });
+                const data = await loginRes.json();
+                if (!loginRes.ok) {
+                    alert(data.error || 'Invalid credentials');
+                    loadCaptcha();
+                    return false;
+                }
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                window.location.href = 'index.html';
+            } catch (e) {
+                alert('Login failed. Is the server running?');
+                loadCaptcha();
+            }
             return false;
         }
-        
-        // Generate CAPTCHA on page load
-        generateCaptcha();
+
+        // Load CAPTCHA on page load
+        loadCaptcha();
     </script>
 </body>
 </html>

@@ -3644,12 +3644,13 @@ input:focus, select:focus, textarea:focus {
 }
 
 .captcha-code {
-    background: var(--bg-card);
-    border: 2px solid rgba(102, 126, 234, 0.3);
+    background: #ffffff;
+    border: 2px dashed #667eea;
     font-family: 'Courier New', monospace;
-    font-weight: 700;
-    letter-spacing: 8px;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: #1e293b;
+    text-shadow: none;
 }
 
 .captcha-refresh {
@@ -4611,16 +4612,16 @@ input:focus, select:focus, textarea:focus {
 /* Fix CAPTCHA Text Visibility */
 .captcha-code {
     flex: 1;
-    background: var(--bg-card) !important;
-    border: 2px solid rgba(102, 126, 234, 0.3) !important;
+    background: #ffffff !important;
+    border: 2px dashed #667eea !important;
     padding: 0.75rem 1rem !important;
     border-radius: 8px !important;
     font-family: 'Courier New', monospace !important;
-    font-weight: 700 !important;
+    font-weight: 900 !important;
     font-size: 1.5rem !important;
-    letter-spacing: 8px !important;
+    letter-spacing: 6px !important;
     text-align: center !important;
-    color: var(--text-primary) !important;
+    color: #1e293b !important;
     text-shadow: none !important;
     user-select: none !important;
     min-height: 50px !important;

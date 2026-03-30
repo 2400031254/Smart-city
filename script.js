@@ -86,12 +86,11 @@ function checkAuth() {
         
         if (user.role === 'admin') {
             navigateTo('admin');
-            setTimeout(() => {
-                initAdminTabs();
-            }, 200);
+            setTimeout(() => initAdminTabs(), 200);
         } else {
             const savedPage = storage.local.get('currentPage', 'dashboard');
-            navigateTo(savedPage === 'admin' ? 'dashboard' : savedPage);
+            const landPage = savedPage === 'admin' ? 'dashboard' : savedPage;
+            navigateTo(landPage);
         }
         setTimeout(() => { _renderBell(); _renderPanel(); }, 400);
     } else {
@@ -232,7 +231,26 @@ function navigateTo(pageId) {
     
     storage.local.set('currentPage', pageId);
     storage.session.set('lastVisited', { page: pageId, time: new Date().toISOString() });
-    
+
+    // Trigger page-specific renders on every navigation
+    if (pageId === 'issues') {
+        setTimeout(() => {
+            renderIssues();
+            storage.local.set('lastIssuesViewed_' + (storage.local.get('currentUser') || {}).name, Date.now());
+        }, 50);
+    }
+    if (pageId === 'admin') {
+        setTimeout(() => { renderAdminPanel(); initAdminTabs(); }, 100);
+    }
+    if (pageId === 'tourists') {
+        setTimeout(() => renderTouristPlaces(), 50);
+    }
+    if (pageId === 'services') {
+        setTimeout(() => { updateStorageStats(); renderUserEmergencyNumbers(); }, 50);
+    }
+    if (pageId === 'citymap') {
+        setTimeout(() => loadInteractiveMap(), 100);
+    }
     if (pageId === 'report') {
         setTimeout(() => {
             const selectedLocation = storage.session.get('selectedLocation');
@@ -259,12 +277,6 @@ navLinks.forEach(link => {
 });
 
 showRegister.addEventListener('click', (e) => {
-    e.preventDefault();
-    loginForm.classList.remove('active');
-    registerForm.classList.add('active');
-});
-
-showLogin.addEventListener('click', (e) => {
     e.preventDefault();
     registerForm.classList.remove('active');
     loginForm.classList.add('active');
@@ -304,23 +316,55 @@ let currentCaptcha = '';
 function generateCaptcha() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let captcha = '';
-    for (let i = 0; i < 6; i++) {
-        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+    for (let i = 0; i < 6; i++) captcha += chars[Math.floor(Math.random() * chars.length)];
     currentCaptcha = captcha;
-    const captchaElement = document.getElementById('captchaCode');
-    if (captchaElement) {
-        captchaElement.textContent = captcha;
+
+    const canvas = document.getElementById('captchaCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+
+    // Noise lines
+    for (let i = 0; i < 5; i++) {
+        ctx.strokeStyle = `hsl(${Math.random()*360},50%,75%)`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(Math.random()*W, Math.random()*H);
+        ctx.lineTo(Math.random()*W, Math.random()*H);
+        ctx.stroke();
     }
+
+    // Noise dots
+    for (let i = 0; i < 30; i++) {
+        ctx.fillStyle = `hsl(${Math.random()*360},40%,70%)`;
+        ctx.beginPath();
+        ctx.arc(Math.random()*W, Math.random()*H, 1.5, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    // Draw characters
+    const colors = ['#3730a3','#7c3aed','#1d4ed8','#0f766e','#b45309','#be185d'];
+    captcha.split('').forEach((ch, i) => {
+        ctx.save();
+        ctx.font = `bold ${26 + Math.floor(Math.random()*6)}px Courier New, monospace`;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.translate(14 + i * 26, 36);
+        ctx.rotate((Math.random() - 0.5) * 0.45);
+        ctx.fillText(ch, 0, 0);
+        ctx.restore();
+    });
 }
 
-// Bind refresh button and generate on load
+// Bind refresh button and generate on load — wait for DOM
 document.getElementById('refreshCaptcha')?.addEventListener('click', generateCaptcha);
-document.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', generateCaptcha);
+} else {
     generateCaptcha();
-});
-if (document.readyState === 'complete' || document.readyState === 'interactive') {
-    setTimeout(generateCaptcha, 100);
 }
 
 
@@ -1396,46 +1440,7 @@ editForm.addEventListener('submit', (e) => {
     }
 });
 
-navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        const page = link.getAttribute('data-page');
-        if (page === 'issues') {
-            renderIssues();
-            storage.local.set('lastIssuesViewed_' + (storage.local.get('currentUser') || {}).name, Date.now());
-        }
-        if (page === 'services') {
-            updateStorageStats();
-            renderUserEmergencyNumbers();
-        }
-        if (page === 'tourists') {
-            renderTouristPlaces();
-        }
-        if (page === 'admin') {
-            setTimeout(() => {
-                renderAdminPanel();
-                initAdminTabs();
-            }, 100);
-        }
-        if (page === 'citymap') {
-            setTimeout(() => loadInteractiveMap(), 100);
-        }
-        if (page === 'report') {
-            setTimeout(() => {
-                const selectedLocation = storage.session.get('selectedLocation');
-                if (selectedLocation) {
-                    const locationField = document.getElementById('location');
-                    if (locationField) {
-                        locationField.value = selectedLocation.address;
-                        locationField.classList.add('success');
-                        const errorSpan = locationField.parentElement.querySelector('.error-message');
-                        if (errorSpan) errorSpan.textContent = '';
-                    }
-                    storage.session.remove('selectedLocation');
-                }
-            }, 100);
-        }
-    });
-});
+
 
 function renderUserEmergencyNumbers() {
     const userEmergencyList = document.getElementById('userEmergencyList');
