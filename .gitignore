@@ -1,0 +1,4 @@
+node_modules/
+smartcity.db
+.env
+*.log

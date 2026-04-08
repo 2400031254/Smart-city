@@ -1,69 +1,56 @@
-# Smart City Dashboard - Backend Setup
+# Smart City Dashboard — Backend API
 
-## Quick Start
+Node.js + Express REST API with MySQL database.
 
-### 1. Install Dependencies
-```bash
-npm install
-```
+## Live API
+🔗 https://smartcity-2-production.up.railway.app
 
-### 2. Start Server
-```bash
-npm start
-```
+## Frontend
+🌐 https://smartcity01.netlify.app
 
-Server runs on: `http://localhost:3000`
+## Tech Stack
+- Node.js + Express
+- MySQL2
+- JWT Authentication
+- bcryptjs for password hashing
+- CORS enabled
+- Deployed on Railway
 
 ## API Endpoints
 
-### Authentication
-- `POST /api/register` - Register new user
-- `POST /api/login` - Login user
+### Auth
+- `POST /api/register` — Register user
+- `POST /api/login` — Login (user/admin)
 
 ### Issues
-- `GET /api/issues` - Get all issues (user: own issues, admin: all)
-- `POST /api/issues` - Report new issue
-- `PUT /api/issues/:id` - Update issue
-- `DELETE /api/issues/:id` - Delete issue
+- `GET /api/issues` — Get issues
+- `POST /api/issues` — Report issue
+- `PUT /api/issues/:id` — Update issue
+- `DELETE /api/issues/:id` — Delete issue
 
 ### Tourist Places
-- `GET /api/places` - Get all places
-- `POST /api/places` - Add place (admin only)
-- `DELETE /api/places/:id` - Delete place (admin only)
+- `GET /api/places` — Get all places
+- `POST /api/places` — Add place (admin)
+- `PUT /api/places/:id` — Update place (admin)
+- `DELETE /api/places/:id` — Delete place (admin)
 
-### Emergency Numbers
-- `GET /api/emergency` - Get emergency numbers
-- `POST /api/emergency` - Add emergency number (admin only)
+### Emergency, Buses, Alerts, Users
+- Full CRUD for each (admin protected)
 
-### Buses
-- `GET /api/buses` - Get bus routes
-- `POST /api/buses` - Add bus route (admin only)
+## Environment Variables
+```
+MYSQLHOST=
+MYSQLPORT=
+MYSQLUSER=
+MYSQLPASSWORD=
+MYSQLDATABASE=
+JWT_SECRET=
+NODE_ENV=production
+PORT=8080
+```
 
-### Alerts
-- `GET /api/alerts` - Get recent alerts
-- `POST /api/alerts` - Add alert (admin only)
-
-### Users
-- `GET /api/users` - Get all users (admin only)
-
-## Default Credentials
-
-**Admin:**
-- Username: `admin`
-- Password: `admin123`
-
-**User:**
-- Username: `user`
-- Password: `user123`
-
-## Database
-
-SQLite database file: `smartcity.db` (auto-created)
-
-## Tech Stack
-
-- Node.js + Express
-- SQLite3
-- JWT Authentication
-- bcrypt for password hashing
-- CORS enabled
+## Run Locally
+```bash
+npm install
+node server.js
+```
