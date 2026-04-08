@@ -3,6 +3,29 @@ const html = document.documentElement;
 const navLinks = document.querySelectorAll('.nav-link');
 const pages = document.querySelectorAll('.page');
 
+// ── API Helper ──────────────────────────────────
+const API = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api'
+    : 'https://smartcity-2-production.up.railway.app/api';
+
+function getToken() { return localStorage.getItem('authToken'); }
+function setToken(t) { localStorage.setItem('authToken', t); }
+function clearToken() { localStorage.removeItem('authToken'); }
+
+async function api(method, endpoint, body) {
+    const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+    };
+    const token = getToken();
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    if (body)  opts.body = JSON.stringify(body);
+    const res = await fetch(API + endpoint, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    return data;
+}
+
 const authScreen = document.getElementById('authScreen');
 const appScreen = document.getElementById('appScreen');
 const loginFormElement = document.getElementById('loginFormElement');
@@ -56,6 +79,9 @@ function checkAuth() {
     const user = storage.local.get('currentUser');
     if (user) {
         authScreen.style.display = 'none';
+        document.getElementById('authPortal').style.display = 'none';
+        document.getElementById('userAuthPanel').style.display = 'none';
+        document.getElementById('adminAuthPanel').style.display = 'none';
         appScreen.classList.remove('hidden');
         userName.textContent = user.name;
         userRole.textContent = user.role || 'user';
@@ -86,14 +112,18 @@ function checkAuth() {
         
         if (user.role === 'admin') {
             navigateTo('admin');
-            setTimeout(() => initAdminTabs(), 200);
+            setTimeout(() => {
+                initAdminTabs();
+            }, 200);
         } else {
             const savedPage = storage.local.get('currentPage', 'dashboard');
-            const landPage = savedPage === 'admin' ? 'dashboard' : savedPage;
-            navigateTo(landPage);
+            navigateTo(savedPage === 'admin' ? 'dashboard' : savedPage);
         }
         setTimeout(() => { _renderBell(); _renderPanel(); }, 400);
     } else {
+        document.getElementById('authPortal').style.display = 'flex';
+        document.getElementById('userAuthPanel').style.display = 'none';
+        document.getElementById('adminAuthPanel').style.display = 'none';
         authScreen.style.display = 'flex';
         appScreen.classList.add('hidden');
     }
@@ -103,8 +133,7 @@ checkAuth();
 
 if (!storage.local.get('users')) {
     storage.local.set('users', [
-        { name: 'nikhil', phone: '0000000000', password: 'nikhil2006', role: 'admin', registeredAt: new Date().toISOString() },
-        { name: 'nikhil', phone: '0000000000', password: 'nikhil2006', role: 'user', registeredAt: new Date().toISOString() }
+        { name: 'nikhil', phone: '0000000000', password: 'nikhil2006', role: 'admin', registeredAt: new Date().toISOString() }
     ]);
 }
 
@@ -169,45 +198,57 @@ if (!storage.local.get('touristPlaces')) {
     ]);
 }
 
-const userLoginBtn = document.getElementById('userLoginBtn');
-const adminLoginBtn = document.getElementById('adminLoginBtn');
-const loginRoleInput = document.getElementById('loginRole');
+// Portal navigation
+window.showAuthPanel = function(type) {
+    document.getElementById('authPortal').style.display = 'none';
+    if (type === 'user') {
+        document.getElementById('userAuthPanel').style.display = 'flex';
+        document.getElementById('adminAuthPanel').style.display = 'none';
+    } else {
+        document.getElementById('adminAuthPanel').style.display = 'flex';
+        document.getElementById('userAuthPanel').style.display = 'none';
+        generateAdminCaptcha();
+    }
+};
 
-const userRegisterBtn = document.getElementById('userRegisterBtn');
-const adminRegisterBtn = document.getElementById('adminRegisterBtn');
+window.showPortal = function() {
+    document.getElementById('authPortal').style.display = 'flex';
+    document.getElementById('userAuthPanel').style.display = 'none';
+    document.getElementById('adminAuthPanel').style.display = 'none';
+};
+
+// Spawn floating particles
+(function spawnParticles() {
+    const container = document.getElementById('authParticles');
+    if (!container) return;
+    const colors = ['#ffd700','#ff8c00','#ff4500','#ff69b4','#00ffcc','#ffffff','#ffec8b'];
+    function createParticle() {
+        const p = document.createElement('div');
+        p.className = 'auth-particle';
+        const size = Math.random() * 6 + 2;
+        p.style.cssText = `
+            width:${size}px; height:${size}px;
+            left:${Math.random()*100}%;
+            background:${colors[Math.floor(Math.random()*colors.length)]};
+            animation-duration:${Math.random()*10+8}s;
+            animation-delay:${Math.random()*5}s;
+            box-shadow:0 0 ${size*2}px currentColor;
+        `;
+        container.appendChild(p);
+        setTimeout(() => p.remove(), 18000);
+    }
+    for (let i = 0; i < 20; i++) setTimeout(createParticle, i * 300);
+    setInterval(createParticle, 800);
+
+    // Update portal user count
+    const countEl = document.getElementById('portalUserCount');
+    if (countEl) {
+        const users = storage.local.get('users', []);
+        countEl.textContent = (users.length || 0) + '+';
+    }
+})();
+
 const registerRoleInput = document.getElementById('registerRole');
-
-if (userLoginBtn && adminLoginBtn) {
-    userLoginBtn.classList.add('active');
-    
-    userLoginBtn.addEventListener('click', () => {
-        userLoginBtn.classList.add('active');
-        adminLoginBtn.classList.remove('active');
-        loginRoleInput.value = 'user';
-    });
-    
-    adminLoginBtn.addEventListener('click', () => {
-        adminLoginBtn.classList.add('active');
-        userLoginBtn.classList.remove('active');
-        loginRoleInput.value = 'admin';
-    });
-}
-
-if (userRegisterBtn && adminRegisterBtn) {
-    userRegisterBtn.classList.add('active');
-    
-    userRegisterBtn.addEventListener('click', () => {
-        userRegisterBtn.classList.add('active');
-        adminRegisterBtn.classList.remove('active');
-        registerRoleInput.value = 'user';
-    });
-    
-    adminRegisterBtn.addEventListener('click', () => {
-        adminRegisterBtn.classList.add('active');
-        userRegisterBtn.classList.remove('active');
-        registerRoleInput.value = 'admin';
-    });
-}
 
 const savedTheme = storage.local.get('theme', 'dark');
 html.setAttribute('data-theme', savedTheme);
@@ -231,26 +272,7 @@ function navigateTo(pageId) {
     
     storage.local.set('currentPage', pageId);
     storage.session.set('lastVisited', { page: pageId, time: new Date().toISOString() });
-
-    // Trigger page-specific renders on every navigation
-    if (pageId === 'issues') {
-        setTimeout(() => {
-            renderIssues();
-            storage.local.set('lastIssuesViewed_' + (storage.local.get('currentUser') || {}).name, Date.now());
-        }, 50);
-    }
-    if (pageId === 'admin') {
-        setTimeout(() => { renderAdminPanel(); initAdminTabs(); }, 100);
-    }
-    if (pageId === 'tourists') {
-        setTimeout(() => renderTouristPlaces(), 50);
-    }
-    if (pageId === 'services') {
-        setTimeout(() => { updateStorageStats(); renderUserEmergencyNumbers(); }, 50);
-    }
-    if (pageId === 'citymap') {
-        setTimeout(() => loadInteractiveMap(), 100);
-    }
+    
     if (pageId === 'report') {
         setTimeout(() => {
             const selectedLocation = storage.session.get('selectedLocation');
@@ -278,21 +300,18 @@ navLinks.forEach(link => {
 
 showRegister.addEventListener('click', (e) => {
     e.preventDefault();
+    loginForm.classList.remove('active');
+    registerForm.classList.add('active');
+});
+
+showLogin.addEventListener('click', (e) => {
+    e.preventDefault();
     registerForm.classList.remove('active');
     loginForm.classList.add('active');
 });
 
 logoutBtn.addEventListener('click', () => {
-    const sessionData = {
-        sessionStart: storage.session.get('sessionStart'),
-        sessionEnd: new Date().toISOString(),
-        lastPage: storage.session.get('lastVisited')
-    };
-    
-    const sessions = storage.local.get('sessions', []);
-    sessions.push(sessionData);
-    storage.local.set('sessions', sessions);
-    
+    clearToken();
     storage.local.remove('currentUser');
     sessionStorage.clear();
     checkAuth();
@@ -316,55 +335,69 @@ let currentCaptcha = '';
 function generateCaptcha() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let captcha = '';
-    for (let i = 0; i < 6; i++) captcha += chars[Math.floor(Math.random() * chars.length)];
+    for (let i = 0; i < 6; i++) {
+        captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
     currentCaptcha = captcha;
-
-    const canvas = document.getElementById('captchaCanvas');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    // White background
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, W, H);
-
-    // Noise lines
-    for (let i = 0; i < 5; i++) {
-        ctx.strokeStyle = `hsl(${Math.random()*360},50%,75%)`;
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(Math.random()*W, Math.random()*H);
-        ctx.lineTo(Math.random()*W, Math.random()*H);
-        ctx.stroke();
+    const captchaElement = document.getElementById('captchaCode');
+    if (captchaElement) {
+        captchaElement.textContent = captcha;
     }
-
-    // Noise dots
-    for (let i = 0; i < 30; i++) {
-        ctx.fillStyle = `hsl(${Math.random()*360},40%,70%)`;
-        ctx.beginPath();
-        ctx.arc(Math.random()*W, Math.random()*H, 1.5, 0, Math.PI*2);
-        ctx.fill();
-    }
-
-    // Draw characters
-    const colors = ['#3730a3','#7c3aed','#1d4ed8','#0f766e','#b45309','#be185d'];
-    captcha.split('').forEach((ch, i) => {
-        ctx.save();
-        ctx.font = `bold ${26 + Math.floor(Math.random()*6)}px Courier New, monospace`;
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.translate(14 + i * 26, 36);
-        ctx.rotate((Math.random() - 0.5) * 0.45);
-        ctx.fillText(ch, 0, 0);
-        ctx.restore();
-    });
 }
 
-// Bind refresh button and generate on load — wait for DOM
+// Bind refresh button and generate on load
 document.getElementById('refreshCaptcha')?.addEventListener('click', generateCaptcha);
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', generateCaptcha);
-} else {
-    generateCaptcha();
+document.addEventListener('DOMContentLoaded', () => { generateCaptcha(); });
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(generateCaptcha, 100);
+}
+
+// Admin captcha
+let currentAdminCaptcha = '';
+function generateAdminCaptcha() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let c = '';
+    for (let i = 0; i < 6; i++) c += chars.charAt(Math.floor(Math.random() * chars.length));
+    currentAdminCaptcha = c;
+    const el = document.getElementById('adminCaptchaCode');
+    if (el) el.textContent = c;
+}
+document.getElementById('adminRefreshCaptcha')?.addEventListener('click', generateAdminCaptcha);
+
+// Admin login form
+const adminLoginFormElement = document.getElementById('adminLoginFormElement');
+if (adminLoginFormElement) {
+    adminLoginFormElement.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('adminLoginName').value.trim();
+        const password = document.getElementById('adminLoginPassword').value;
+        const captchaInput = document.getElementById('adminCaptchaInput').value.toUpperCase();
+        const nameField = document.getElementById('adminLoginName');
+        const captchaField = document.getElementById('adminCaptchaInput');
+
+        if (!name) { nameField.classList.add('error'); nameField.parentElement.querySelector('.error-message').textContent = 'Username required'; return; }
+        if (!password) { document.getElementById('adminLoginPassword').classList.add('error'); document.getElementById('adminLoginPassword').parentElement.querySelector('.error-message').textContent = 'Password required'; return; }
+        if (captchaInput !== currentAdminCaptcha) {
+            captchaField.classList.add('error');
+            captchaField.parentElement.querySelector('.error-message').textContent = 'Invalid CAPTCHA';
+            generateAdminCaptcha();
+            return;
+        }
+        try {
+            const data = await api('POST', '/login', { name, password, role: 'admin' });
+            setToken(data.token);
+            storage.local.set('currentUser', data.user);
+            adminLoginFormElement.reset();
+            generateAdminCaptcha();
+            setTimeout(() => showSparkleWelcome('admin'), 500);
+            checkAuth();
+            setTimeout(() => { _renderBell(); _renderPanel(); }, 300);
+        } catch (err) {
+            nameField.classList.add('error');
+            nameField.parentElement.querySelector('.error-message').textContent = err.message || 'Invalid credentials';
+            generateAdminCaptcha();
+        }
+    });
 }
 
 
@@ -393,89 +426,72 @@ function validateAuthField(field) {
     });
 });
 
-loginFormElement.addEventListener('submit', (e) => {
+loginFormElement.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     let isValid = true;
     loginFormElement.querySelectorAll('input:not([type="hidden"])').forEach(field => {
         if (!validateAuthField(field)) isValid = false;
     });
-    
-    if (isValid) {
-        const name = document.getElementById('loginName').value;
-        const password = document.getElementById('loginPassword').value;
-        const role = document.getElementById('loginRole').value;
-        const captchaInput = document.getElementById('captchaInput').value.toUpperCase();
-        const users = storage.local.get('users', []);
-        
-        if (captchaInput !== currentCaptcha) {
-            const captchaField = document.getElementById('captchaInput');
-            captchaField.classList.add('error');
-            captchaField.parentElement.querySelector('.error-message').textContent = 'Invalid CAPTCHA';
-            generateCaptcha();
-            return;
-        }
-        
-        const user = users.find(u => u.name === name && u.password === password && u.role === role);
-        
-        if (user) {
-            storage.local.set('currentUser', user);
-            storage.local.set('lastLogin', new Date().toISOString());
-            loginFormElement.reset();
-            loginFormElement.querySelectorAll('input').forEach(f => f.classList.remove('success', 'error'));
-            setTimeout(() => showSparkleWelcome(user.role), 500);
-            adminLoginBtn.classList.remove('active');
-            loginRoleInput.value = 'user';
-            generateCaptcha();
-            checkAuth();
-            setTimeout(() => { _renderBell(); _renderPanel(); }, 300);
-        } else {
-            const nameField = document.getElementById('loginName');
-            nameField.classList.add('error');
-            nameField.parentElement.querySelector('.error-message').textContent = 'Invalid credentials for selected login type';
-            generateCaptcha();
-        }
+    if (!isValid) return;
+
+    const name = document.getElementById('loginName').value;
+    const password = document.getElementById('loginPassword').value;
+    const role = document.getElementById('loginRole').value;
+    const captchaInput = document.getElementById('captchaInput').value.toUpperCase();
+
+    if (captchaInput !== currentCaptcha) {
+        const captchaField = document.getElementById('captchaInput');
+        captchaField.classList.add('error');
+        captchaField.parentElement.querySelector('.error-message').textContent = 'Invalid CAPTCHA';
+        generateCaptcha();
+        return;
+    }
+
+    try {
+        const data = await api('POST', '/login', { name, password, role });
+        setToken(data.token);
+        storage.local.set('currentUser', data.user);
+        storage.local.set('lastLogin', new Date().toISOString());
+        loginFormElement.reset();
+        loginFormElement.querySelectorAll('input').forEach(f => f.classList.remove('success', 'error'));
+        generateCaptcha();
+        setTimeout(() => showSparkleWelcome(data.user.role), 500);
+        checkAuth();
+        setTimeout(() => { _renderBell(); _renderPanel(); }, 300);
+    } catch (err) {
+        const nameField = document.getElementById('loginName');
+        nameField.classList.add('error');
+        nameField.parentElement.querySelector('.error-message').textContent = err.message || 'Invalid credentials';
+        generateCaptcha();
     }
 });
 
-registerFormElement.addEventListener('submit', (e) => {
+registerFormElement.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     let isValid = true;
     registerFormElement.querySelectorAll('input').forEach(field => {
         if (!validateAuthField(field)) isValid = false;
     });
-    
-    if (isValid) {
-        const name = document.getElementById('regName').value;
-        const phone = document.getElementById('regPhone').value;
-        const password = document.getElementById('regPassword').value;
-        const role = document.getElementById('registerRole').value;
-        
-        const users = storage.local.get('users', []);
-        
-        if (users.find(u => u.name === name)) {
-            const nameField = document.getElementById('regName');
-            nameField.classList.add('error');
-            nameField.parentElement.querySelector('.error-message').textContent = 'Name already registered';
-            return;
-        }
-        
-        if (users.find(u => u.phone === phone)) {
-            const phoneField = document.getElementById('regPhone');
-            phoneField.classList.add('error');
-            phoneField.parentElement.querySelector('.error-message').textContent = 'Phone number already registered';
-            return;
-        }
-        
-        const newUser = { name, phone, password, role: role, registeredAt: new Date().toISOString() };
-        users.push(newUser);
-        storage.local.set('users', users);
-        storage.local.set('currentUser', newUser);
-        
+    if (!isValid) return;
+
+    const name = document.getElementById('regName').value;
+    const phone = document.getElementById('regPhone').value;
+    const password = document.getElementById('regPassword').value;
+    const role = document.getElementById('registerRole').value;
+
+    try {
+        await api('POST', '/register', { name, phone, password, role });
+        // Auto login after register
+        const data = await api('POST', '/login', { name, password, role });
+        setToken(data.token);
+        storage.local.set('currentUser', data.user);
         registerFormElement.reset();
         registerFormElement.querySelectorAll('input').forEach(f => f.classList.remove('success', 'error'));
         checkAuth();
+    } catch (err) {
+        const nameField = document.getElementById('regName');
+        nameField.classList.add('error');
+        nameField.parentElement.querySelector('.error-message').textContent = err.message || 'Registration failed';
     }
 });
 
@@ -557,9 +573,8 @@ if (draft) {
     document.getElementById('description').value = draft.description || '';
 }
 
-form.addEventListener('submit', (e) => {
+form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    
     let isValid = true;
     form.querySelectorAll('input, select, textarea').forEach(field => {
         if (field.type === 'file') return;
@@ -567,42 +582,42 @@ form.addEventListener('submit', (e) => {
         if (stepContent && !stepContent.classList.contains('active')) return;
         if (!validateField(field)) isValid = false;
     });
-    
-    if (isValid) {
-        const currentUser = storage.local.get('currentUser');
-        const issue = {
-            id: Date.now(),
-            name: document.getElementById('name').value,
-            userName: currentUser ? currentUser.name : document.getElementById('name').value,
-            phone: document.getElementById('phone').value,
-            category: document.getElementById('category').value,
-            location: document.getElementById('location').value,
-            description: document.getElementById('description').value,
-            photo: window._issuePhotoData || null,
-            status: 'pending',
-            priority: 'medium',
-            date: new Date().toLocaleDateString(),
-            createdAt: new Date().toISOString()
-        };
+    if (!isValid) return;
+
+    const currentUser = storage.local.get('currentUser');
+    const issueData = {
+        name: document.getElementById('name').value,
+        phone: document.getElementById('phone').value,
+        category: document.getElementById('category').value,
+        location: document.getElementById('location').value,
+        description: document.getElementById('description').value,
+        photo: window._issuePhotoData || null
+    };
+
+    try {
+        const data = await api('POST', '/issues', issueData);
         window._issuePhotoData = null;
-        
+
+        // Also keep in localStorage for offline display
+        const issue = { ...issueData, id: data.id, userName: currentUser?.name,
+            status: 'pending', priority: 'medium',
+            date: new Date().toLocaleDateString(), createdAt: new Date().toISOString() };
         const issues = storage.local.get('issues', []);
         issues.push(issue);
         storage.local.set('issues', issues);
-        
+
         updateNotificationBadge();
-        notifyIssueSubmitted(issue.category, issue.location);
-        
+        notifyIssueSubmitted(issueData.category, issueData.location);
         clearFormDraft('reportForm');
-        
-        const refId = 'SC' + issue.id.toString().slice(-8);
+
+        const refId = 'SC' + String(data.id).padStart(8, '0');
         document.getElementById('refId').textContent = refId;
-        
         form.style.display = 'none';
         successMessage.classList.remove('hidden');
-        successMessage.classList.remove('report-success');
         successMessage.classList.add('report-success');
         _loadReportMiniStats();
+    } catch (err) {
+        alert('Failed to submit: ' + err.message);
     }
 });
 
@@ -642,8 +657,12 @@ function startLiveClock() {
     setInterval(updateActiveUsers, 5000);
 }
 
-function renderAlerts() {
+async function renderAlerts() {
     const alertsList = document.getElementById('alertsList');
+    try {
+        const apiAlerts = await api('GET', '/alerts');
+        storage.local.set('alerts', apiAlerts.map(a => ({ ...a, time: a.time })));
+    } catch(e) {}
     const alerts = storage.local.get('alerts', [
         { id: 1, type: 'warning', message: 'Heavy traffic on Main St', time: Date.now() - 300000 },
         { id: 2, type: 'info', message: 'Street cleaning scheduled', time: Date.now() - 3600000 },
@@ -866,12 +885,12 @@ window.showSuggestions = function(searchText) {
 
     box.innerHTML = matches.map(p => `
         <div onclick="selectSuggestion('${sanitizeHTML(p.name)}')"
-            style="display:flex; align-items:center; gap:14px; padding:12px 18px; cursor:pointer; transition:background 0.2s; border-bottom:1px solid #f1f5f9; background: white;"
-            onmouseover="this.style.background='#f0f4ff'" onmouseout="this.style.background='white'">
+            style="display:flex; align-items:center; gap:14px; padding:12px 18px; cursor:pointer; transition:background 0.2s; border-bottom:1px solid var(--border); background: var(--bg-card);"
+            onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='var(--bg-card)'">
             <span style="font-size:2rem; min-width:40px; text-align:center;">${p.icon}</span>
             <div style="flex:1;">
-                <div style="font-weight:700; color:#1e293b; font-size:0.95rem; margin-bottom:2px;">${highlightMatch(p.name, search)}</div>
-                <div style="font-size:0.8rem; color:#64748b;">📍 ${p.address}</div>
+                <div style="font-weight:700; color:var(--text-primary); font-size:0.95rem; margin-bottom:2px;">${highlightMatch(p.name, search)}</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary);">📍 ${p.address}</div>
             </div>
             <span style="font-size:0.75rem; color:#6366f1; font-weight:600; background:#e0e7ff; padding:3px 8px; border-radius:20px;">View</span>
         </div>
@@ -1155,16 +1174,25 @@ alertForm.addEventListener('submit', (e) => {
     if (!id) notifyNewAlert(message, type);
 });
 
-function renderIssues() {
+async function renderIssues() {
     const issuesList = document.getElementById('issuesList');
     const emptyState = document.getElementById('emptyState');
-    const issues = storage.local.get('issues', []);
     const user = storage.local.get('currentUser');
-
     if (!user) { issuesList.innerHTML = ''; emptyState.classList.remove('hidden'); return; }
+    try {
+        const apiIssues = await api('GET', '/issues');
+        const all = storage.local.get('issues', []);
+        apiIssues.forEach(i => {
+            const merged = { ...i, userName: i.user_name, date: new Date(i.created_at).toLocaleDateString(), createdAt: i.created_at, solutionViewed: !!i.solution_viewed, resolvedViewed: !!i.resolved_viewed };
+            const idx = all.findIndex(x => x.id === i.id);
+            if (idx === -1) all.push(merged); else all[idx] = merged;
+        });
+        storage.local.set('issues', all);
+    } catch(e) {}
+    const issues = storage.local.get('issues', []);
 
     storage.session.set('issuesViewedAt', new Date().toISOString());
-    let userIssues = issues.filter(i => i.userName === user.name || i.name === user.name);
+    let userIssues = issues.filter(i => i.userName === user.name || i.name === user.name || i.user_name === user.name);
 
     userIssues.forEach(issue => {
         if (issue.solution) issue.solutionViewed = true;
@@ -1440,7 +1468,46 @@ editForm.addEventListener('submit', (e) => {
     }
 });
 
-
+navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+        const page = link.getAttribute('data-page');
+        if (page === 'issues') {
+            renderIssues();
+            storage.local.set('lastIssuesViewed_' + (storage.local.get('currentUser') || {}).name, Date.now());
+        }
+        if (page === 'services') {
+            updateStorageStats();
+            renderUserEmergencyNumbers();
+        }
+        if (page === 'tourists') {
+            renderTouristPlaces();
+        }
+        if (page === 'admin') {
+            setTimeout(() => {
+                renderAdminPanel();
+                initAdminTabs();
+            }, 100);
+        }
+        if (page === 'citymap') {
+            setTimeout(() => loadInteractiveMap(), 100);
+        }
+        if (page === 'report') {
+            setTimeout(() => {
+                const selectedLocation = storage.session.get('selectedLocation');
+                if (selectedLocation) {
+                    const locationField = document.getElementById('location');
+                    if (locationField) {
+                        locationField.value = selectedLocation.address;
+                        locationField.classList.add('success');
+                        const errorSpan = locationField.parentElement.querySelector('.error-message');
+                        if (errorSpan) errorSpan.textContent = '';
+                    }
+                    storage.session.remove('selectedLocation');
+                }
+            }, 100);
+        }
+    });
+});
 
 function renderUserEmergencyNumbers() {
     const userEmergencyList = document.getElementById('userEmergencyList');
@@ -1480,7 +1547,17 @@ function renderUserEmergencyNumbers() {
     `).join('');
 }
 
-function renderAdminPanel() {
+async function renderAdminPanel() {
+    try {
+        const apiIssues = await api('GET', '/issues');
+        const all = storage.local.get('issues', []);
+        apiIssues.forEach(i => {
+            const merged = { ...i, userName: i.user_name, date: new Date(i.created_at).toLocaleDateString(), createdAt: i.created_at };
+            const idx = all.findIndex(x => x.id === i.id);
+            if (idx === -1) all.push(merged); else all[idx] = merged;
+        });
+        storage.local.set('issues', all);
+    } catch(e) {}
     const allIssues = storage.local.get('issues', []);
     const users = storage.local.get('users', []);
     const places = storage.local.get('touristPlaces', []);
@@ -1551,19 +1628,12 @@ function renderAdminPanel() {
     `).join('');
 }
 
-window.resolveIssue = function(id) {
+window.resolveIssue = async function(id) {
+    try { await api('PUT', '/issues/' + id, { status: 'resolved' }); } catch(e) {}
     let issues = storage.local.get('issues', []);
     const index = issues.findIndex(i => i.id === id);
-    if (index !== -1) {
-        issues[index].status = 'resolved';
-        issues[index].resolvedAt = new Date().toISOString();
-        issues[index].resolvedViewed = false;
-        storage.local.set('issues', issues);
-        renderAdminPanel();
-        renderIssues();
-        updateNotificationBadge();
-        notifyIssueUpdated('resolved', issues[index].category);
-    }
+    if (index !== -1) { issues[index].status = 'resolved'; issues[index].resolvedViewed = false; storage.local.set('issues', issues); notifyIssueUpdated('resolved', issues[index].category); }
+    renderAdminPanel(); renderIssues(); updateNotificationBadge();
 };
 
 window.addSolution = function(id) {
@@ -1583,18 +1653,16 @@ window.addSolution = function(id) {
     }
 };
 
-window.completeIssue = function(id) {
+window.completeIssue = async function(id) {
+    try { await api('PUT', '/issues/' + id, { status: 'completed' }); } catch(e) {}
     let issues = storage.local.get('issues', []);
     const index = issues.findIndex(i => i.id === id);
-    if (index !== -1) {
-        issues[index].status = 'completed';
-        issues[index].completedAt = new Date().toISOString();
-        storage.local.set('issues', issues);
-        renderAdminPanel();
-    }
+    if (index !== -1) { issues[index].status = 'completed'; storage.local.set('issues', issues); }
+    renderAdminPanel();
 };
 
-window.adminDeleteIssue = function(id) {
+window.adminDeleteIssue = async function(id) {
+    try { await api('DELETE', '/issues/' + id); } catch(e) {}
     let issues = storage.local.get('issues', []);
     issues = issues.filter(i => i.id !== id);
     storage.local.set('issues', issues);
@@ -2272,6 +2340,10 @@ async function fetchWeather() {
 
 async function fetchTransport() {
     const transportList = document.getElementById('transportList');
+    try {
+        const apiBuses = await api('GET', '/buses');
+        storage.local.set('buses', apiBuses);
+    } catch(e) {}
     const buses = storage.local.get('buses', []);
     
     if (buses.length === 0) {
@@ -2619,19 +2691,19 @@ window.globalSearchFn = function(query) {
     const all = [...results, ...placeResults, ...issueResults].slice(0, 8);
 
     if (all.length === 0) {
-        box.innerHTML = `<div style="padding:1.2rem; text-align:center; color:#64748b; font-size:0.9rem;">🔍 No results for "${sanitizeHTML(query)}"</div>`;
+        box.innerHTML = `<div style="padding:1.2rem; text-align:center; color:var(--text-secondary); font-size:0.9rem;">🔍 No results for "${sanitizeHTML(query)}"</div>`;
         box.style.display = 'block';
         return;
     }
 
     box.innerHTML = all.map(item => `
         <div onclick="navigateTo('${item.page}'); closeGlobalSearch(); document.getElementById('globalSearch').value=''; window.scrollTo(0,0);"
-            style="display:flex; align-items:center; gap:14px; padding:12px 18px; cursor:pointer; border-bottom:1px solid #f1f5f9; background:white; transition:background 0.15s;"
-            onmouseover="this.style.background='#f5f7ff'" onmouseout="this.style.background='white'">
+            style="display:flex; align-items:center; gap:14px; padding:12px 18px; cursor:pointer; border-bottom:1px solid var(--border); background:var(--bg-card); transition:background 0.15s;"
+            onmouseover="this.style.background='var(--bg-secondary)'" onmouseout="this.style.background='var(--bg-card)'">
             <span style="font-size:1.6rem; min-width:36px; text-align:center;">${item.icon}</span>
             <div style="flex:1;">
-                <div style="font-weight:700; color:#1e293b; font-size:0.92rem;">${highlightMatch(item.title, q)}</div>
-                <div style="font-size:0.78rem; color:#64748b; margin-top:2px;">${sanitizeHTML(item.desc)}</div>
+                <div style="font-weight:700; color:var(--text-primary); font-size:0.92rem;">${highlightMatch(item.title, q)}</div>
+                <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:2px;">${sanitizeHTML(item.desc)}</div>
             </div>
             <span style="font-size:0.72rem; background:#e0e7ff; color:#6366f1; padding:3px 10px; border-radius:20px; font-weight:600; white-space:nowrap;">Go →</span>
         </div>
@@ -2981,12 +3053,13 @@ document.getElementById('closeSolutionModal').addEventListener('click', () => {
     document.getElementById('solutionModal').classList.add('hidden');
 });
 
-document.getElementById('solutionForm').addEventListener('submit', function(e) {
+document.getElementById('solutionForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const id = parseInt(document.getElementById('solutionIssueId').value);
     const solution = document.getElementById('solutionText').value.trim();
     const priority = document.getElementById('solutionPriority').value;
     if (!solution) return;
+    try { await api('PUT', '/issues/' + id, { solution, priority }); } catch(e) {}
     let issues = storage.local.get('issues', []);
     const index = issues.findIndex(i => i.id === id);
     if (index !== -1) {
@@ -2994,11 +3067,9 @@ document.getElementById('solutionForm').addEventListener('submit', function(e) {
         issues[index].priority = priority;
         issues[index].solutionViewed = false;
         storage.local.set('issues', issues);
-        renderAdminPanel();
-        renderIssues();
-        updateNotificationBadge();
         notifyIssueUpdated('in-progress', issues[index].category);
     }
+    renderAdminPanel(); renderIssues(); updateNotificationBadge();
     document.getElementById('solutionModal').classList.add('hidden');
 });
 
@@ -3271,9 +3342,9 @@ function _renderSuggestionsDefault() {
         <div class="map-suggest-label">Quick Categories</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.4rem;padding:0.4rem 1rem 0.6rem;">
             ${MAP_CATEGORIES.map(c => `
-            <button onclick="mapPickCategory('${c.query}')" style="display:flex;align-items:center;gap:0.35rem;padding:0.35rem 0.75rem;border:1.5px solid #e2e8f0;border-radius:20px;background:#fff;font-size:0.78rem;font-weight:600;color:#475569;cursor:pointer;transition:all 0.2s;font-family:inherit;"
-                onmouseover="this.style.borderColor='#6366f1';this.style.color='#6366f1';this.style.background='rgba(99,102,241,0.06)'"
-                onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#475569';this.style.background='#fff'">
+            <button onclick="mapPickCategory('${c.query}')" style="display:flex;align-items:center;gap:0.35rem;padding:0.35rem 0.75rem;border:1.5px solid var(--border);border-radius:20px;background:var(--bg-card);font-size:0.78rem;font-weight:600;color:var(--text-secondary);cursor:pointer;transition:all 0.2s;font-family:inherit;"
+                onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)';this.style.background='rgba(99,102,241,0.06)'"
+                onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-secondary)';this.style.background='var(--bg-card)'">
                 ${c.icon} ${c.label}
             </button>`).join('')}
         </div>

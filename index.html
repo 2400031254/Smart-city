@@ -3,116 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; frame-src *; connect-src 'self' http://localhost:3000 https://api.openaq.org https://api.open-meteo.com https://api.bigdatacloud.net https://nominatim.openstreetmap.org;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; frame-src *; connect-src 'self' http://localhost:3000 https://smartcity-2-production.up.railway.app https://api.openaq.org https://api.open-meteo.com https://api.bigdatacloud.net https://nominatim.openstreetmap.org;">
     <title>Smart City Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="auth-styles.css">
     <link rel="stylesheet" href="border-glow.css">
-    <style>
-        #loginFormElement input,
-        #registerFormElement input {
-            height: 48px !important;
-            padding: 0 16px !important;
-            font-size: 1rem !important;
-            background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,245,255,0.95)) !important;
-            color: #1e293b !important;
-            border-radius: 10px !important;
-            box-sizing: border-box !important;
-            line-height: 48px !important;
-            min-height: unset !important;
-            max-height: 48px !important;
-            border: 2px solid rgba(255,255,255,0.4) !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-        }
-    </style>
+
 </head>
 <body>
     <div id="authScreen" class="auth-screen">
-        <div class="auth-right">
-        <div class="auth-container">
-            <div class="auth-header">
+
+        <!-- Floating particles -->
+        <div class="auth-particles" id="authParticles"></div>
+
+        <!-- Portal Selector -->
+        <div class="auth-portal" id="authPortal">
+            <div class="auth-portal-header">
+                <span class="auth-portal-logo">🌆</span>
                 <h1>SMART CITY</h1>
                 <p>Intelligent Urban Management System</p>
             </div>
 
-            <div id="loginForm" class="auth-form active">
-                <h2>Login</h2>
-                
-                <div class="login-type-selector">
-                    <div class="login-type-btn" id="userLoginBtn" data-type="user">
-                        <span class="icon">👤</span>
-                        <span class="label">User Login</span>
-                    </div>
-                    <div class="login-type-btn" id="adminLoginBtn" data-type="admin">
-                        <span class="icon">🔒</span>
-                        <span class="label">Admin Login</span>
-                    </div>
+            <!-- Live city stats -->
+            <div class="auth-city-stats">
+                <div class="auth-city-stat"><span>🚦</span><small>Traffic Live</small></div>
+                <div class="auth-city-stat"><span id="portalUserCount">0</span><small>Citizens</small></div>
+                <div class="auth-city-stat"><span>🌟 24/7</span><small>Active</small></div>
+            </div>
+            <div class="auth-portal-cards">
+                <!-- User Card -->
+                <div class="portal-card user" onclick="showAuthPanel('user')">
+                    <div class="portal-card-icon">👤</div>
+                    <h3>Citizen Portal</h3>
+                    <p>Report issues, track status, explore city services and tourist places</p>
+                    <button class="portal-card-btn">🚀 Enter as User</button>
                 </div>
-                
-                <form id="loginFormElement" novalidate>
-                    <input type="hidden" id="loginRole" value="user">
-                    <div class="form-group">
-                        <label for="loginName" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Name (Username)</label>
-                        <input type="text" id="loginName" required style="width: 100% !important; padding: 0 0.75rem !important; font-size: 0.82rem !important; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,245,255,0.95)) !important; color: #1e293b !important; border-radius: 6px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important; height: 30px !important; line-height: 30px !important; box-sizing: border-box !important;">
-                        <span class="error-message"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="loginPassword" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Password</label>
-                        <input type="password" id="loginPassword" required style="width: 100% !important; padding: 0 0.75rem !important; font-size: 0.82rem !important; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,245,255,0.95)) !important; color: #1e293b !important; border-radius: 6px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important; height: 30px !important; line-height: 30px !important; box-sizing: border-box !important;">
-                        <span class="error-message"></span>
-                    </div>
-                    <div class="form-group">
-                        <label style="font-size:0.78rem;margin-bottom:0.25rem;display:block;">Enter CAPTCHA *</label>
-                        <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
-                            <canvas id="captchaCanvas" width="180" height="52" style="border-radius:10px;border:2px dashed #6366f1;background:#fff;flex:1;cursor:pointer;" title="Click to refresh"></canvas>
-                            <button type="button" id="refreshCaptcha" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;padding:12px 14px;border-radius:10px;cursor:pointer;font-size:1.2rem;box-shadow:0 4px 12px rgba(99,102,241,0.3);flex-shrink:0;">🔄</button>
+                <!-- Admin Card -->
+                <div class="portal-card admin" onclick="showAuthPanel('admin')">
+                    <div class="portal-card-icon">🔐</div>
+                    <h3>Admin Portal</h3>
+                    <p>Manage issues, users, alerts, transport and city infrastructure</p>
+                    <button class="portal-card-btn">🛡️ Enter as Admin</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- User Auth Panel -->
+        <div class="auth-right" id="userAuthPanel" style="display:none;">
+            <div class="auth-container user-theme">
+                <button class="auth-back-btn" onclick="showPortal()">← Back</button>
+                <div class="auth-card">
+                    <div class="auth-card-accent"></div>
+
+                    <!-- Login Form -->
+                    <div id="loginForm" class="auth-form active">
+                        <div class="auth-card-header">
+                            <div class="auth-card-header-icon">👤</div>
+                            <div class="auth-card-header-text">
+                                <h2>Welcome Back</h2>
+                                <p>Sign in to your citizen account</p>
+                            </div>
                         </div>
-                        <input type="text" id="captchaInput" required placeholder="Enter code above" autocomplete="off" style="width:100%!important;padding:0 0.75rem!important;font-size:0.82rem!important;background:linear-gradient(135deg,rgba(255,255,255,0.95),rgba(240,245,255,0.95))!important;color:#1e293b!important;border-radius:6px!important;box-shadow:0 2px 6px rgba(0,0,0,0.1)!important;height:30px!important;line-height:30px!important;box-sizing:border-box!important;">
-                        <span class="error-message"></span>
+                        <div class="auth-form-body">
+                            <form id="loginFormElement" novalidate>
+                                <input type="hidden" id="loginRole" value="user">
+                                <div class="form-group">
+                                    <label for="loginName">👤 Username</label>
+                                    <input type="text" id="loginName" required placeholder="Enter your username">
+                                    <span class="error-message"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="loginPassword">🔑 Password</label>
+                                    <input type="password" id="loginPassword" required placeholder="Enter your password">
+                                    <span class="error-message"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Enter CAPTCHA *</label>
+                                    <div class="captcha-container">
+                                        <div class="captcha-code" id="captchaCode"></div>
+                                        <button type="button" id="refreshCaptcha" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);border:none;color:white;padding:0 14px;border-radius:12px;cursor:pointer;font-size:1.2rem;height:46px;flex-shrink:0;">🔄</button>
+                                    </div>
+                                    <input type="text" id="captchaInput" required placeholder="Type the code above">
+                                    <span class="error-message"></span>
+                                </div>
+                                <button type="submit" class="btn-primary">→ Sign In</button>
+                            </form>
+                            <p class="auth-switch">New to Smart City? <a href="#" id="showRegister">Create Account</a></p>
+                        </div>
                     </div>
-                    <button type="submit" class="btn-primary">Login</button>
-                </form>
-                <p class="auth-switch">Don't have an account? <a href="#" id="showRegister">Register</a></p>
 
+                    <!-- Register Form -->
+                    <div id="registerForm" class="auth-form">
+                        <div class="auth-card-header">
+                            <div class="auth-card-header-icon">✨</div>
+                            <div class="auth-card-header-text">
+                                <h2>Create Account</h2>
+                                <p>Join the Smart City community</p>
+                            </div>
+                        </div>
+                        <div class="auth-form-body">
+                            <form id="registerFormElement" novalidate>
+                                <input type="hidden" id="registerRole" value="user">
+                                <div class="form-group">
+                                    <label for="regName">👤 Full Name *</label>
+                                    <input type="text" id="regName" required placeholder="Enter your full name">
+                                    <span class="error-message"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regPhone">📱 Phone Number *</label>
+                                    <input type="tel" id="regPhone" required pattern="[0-9]{10}" maxlength="10" placeholder="10 digit number">
+                                    <span class="error-message"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="regPassword">🔑 Password *</label>
+                                    <input type="password" id="regPassword" required minlength="6" placeholder="Min 6 characters">
+                                    <span class="error-message"></span>
+                                </div>
+                                <button type="submit" class="btn-primary">→ Create Account</button>
+                            </form>
+                            <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Sign In</a></p>
+                        </div>
+                    </div>
+
+                </div>
             </div>
+        </div>
 
-            <div id="registerForm" class="auth-form">
-                <h2>Create Account</h2>
-                
-                <div class="login-type-selector">
-                    <div class="login-type-btn active" id="userRegisterBtn" data-type="user">
-                        <span class="icon">👤</span>
-                        <span class="label">User Signup</span>
+        <!-- Admin Auth Panel -->
+        <div class="auth-right" id="adminAuthPanel" style="display:none;">
+            <div class="auth-container admin-theme">
+                <button class="auth-back-btn" onclick="showPortal()">← Back</button>
+                <div class="auth-card">
+                    <div class="auth-card-accent"></div>
+                    <div class="auth-card-header">
+                        <div class="auth-card-header-icon">🔐</div>
+                        <div class="auth-card-header-text">
+                            <h2>Admin Access</h2>
+                            <p>Restricted to authorized personnel only</p>
+                        </div>
                     </div>
-                    <div class="login-type-btn" id="adminRegisterBtn" data-type="admin">
-                        <span class="icon">🔒</span>
-                        <span class="label">Admin Signup</span>
+                    <div class="auth-form-body">
+                        <div class="admin-badge">🛡️ Secure Admin Login</div>
+                        <form id="adminLoginFormElement" novalidate>
+                            <input type="hidden" id="adminLoginRole" value="admin">
+                            <div class="form-group">
+                                <label>👤 Admin Username</label>
+                                <input type="text" id="adminLoginName" required placeholder="Enter admin username">
+                                <span class="error-message"></span>
+                            </div>
+                            <div class="form-group">
+                                <label>🔑 Admin Password</label>
+                                <input type="password" id="adminLoginPassword" required placeholder="Enter admin password">
+                                <span class="error-message"></span>
+                            </div>
+                            <div class="form-group">
+                                <label>Enter CAPTCHA *</label>
+                                <div class="captcha-container">
+                                    <div class="captcha-code" id="adminCaptchaCode"></div>
+                                    <button type="button" id="adminRefreshCaptcha" style="background:linear-gradient(135deg,#f59e0b,#ef4444);border:none;color:white;padding:0 14px;border-radius:12px;cursor:pointer;font-size:1.2rem;height:46px;flex-shrink:0;">🔄</button>
+                                </div>
+                                <input type="text" id="adminCaptchaInput" required placeholder="Type the code above">
+                                <span class="error-message"></span>
+                            </div>
+                            <button type="submit" class="btn-primary">🔐 Secure Login</button>
+                        </form>
                     </div>
                 </div>
-                
-                <form id="registerFormElement" novalidate>
-                    <input type="hidden" id="registerRole" value="user">
-                    <div class="form-group">
-                        <label for="regName" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Full Name *</label>
-                        <input type="text" id="regName" required style="width: 100% !important; padding: 0 0.75rem !important; font-size: 0.82rem !important; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,245,255,0.95)) !important; color: #1e293b !important; border-radius: 6px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important; height: 30px !important; line-height: 30px !important; box-sizing: border-box !important;">
-                        <span class="error-message"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="regPhone" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Phone Number *</label>
-                        <input type="tel" id="regPhone" required pattern="[0-9]{10}" maxlength="10" placeholder="10 digits only" style="width: 100% !important; padding: 0 0.75rem !important; font-size: 0.82rem !important; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,245,255,0.95)) !important; color: #1e293b !important; border-radius: 6px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important; height: 30px !important; line-height: 30px !important; box-sizing: border-box !important;">
-                        <span class="error-message"></span>
-                    </div>
-                    <div class="form-group">
-                        <label for="regPassword" style="font-size: 0.78rem; margin-bottom: 0.25rem;">Password *</label>
-                        <input type="password" id="regPassword" required minlength="6" style="width: 100% !important; padding: 0 0.75rem !important; font-size: 0.82rem !important; background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,245,255,0.95)) !important; color: #1e293b !important; border-radius: 6px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important; height: 30px !important; line-height: 30px !important; box-sizing: border-box !important;">
-                        <span class="error-message"></span>
-                    </div>
-                    <button type="submit" class="btn-primary">Create Account</button>
-                </form>
-                <p class="auth-switch">Already have an account? <a href="#" id="showLogin">Login</a></p>
             </div>
         </div>
-        </div>
+
     </div>
 
     <div id="appScreen" class="app-screen hidden">
@@ -209,11 +271,11 @@
             <div style="max-width:560px; margin:-1.5rem auto 2rem; position:relative; z-index:99999;">
                 <span style="position:absolute; left:16px; top:50%; transform:translateY(-50%); font-size:1.1rem; z-index:2;">🔍</span>
                 <input type="text" id="globalSearch" placeholder="Search pages, places, issues, services..." autocomplete="off"
-                    style="width:100%; padding:0.85rem 1rem 0.85rem 2.8rem; border:2px solid #e2e8f0; border-radius:25px; font-size:0.95rem; background:#ffffff; color:#1e293b; outline:none; box-shadow:0 4px 20px rgba(0,0,0,0.12); transition:all 0.3s ease;"
+                    style="width:100%; padding:0.85rem 1rem 0.85rem 2.8rem; border:2px solid var(--border); border-radius:25px; font-size:0.95rem; background:var(--bg-card); color:var(--text-primary); outline:none; box-shadow:var(--shadow); transition:all 0.3s ease;"
                     oninput="globalSearchFn(this.value)"
-                    onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 4px 20px rgba(99,102,241,0.25)'; globalSearchFn(this.value)"
-                    onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.12)'; setTimeout(()=>closeGlobalSearch(),200)">
-                <div id="globalSearchResults" style="display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,0.25); z-index:99999; overflow:hidden; border:2px solid #e2e8f0; max-height:380px; overflow-y:auto;"></div>
+                    onfocus="this.style.borderColor='var(--accent)'; globalSearchFn(this.value)"
+                    onblur="this.style.borderColor=''; setTimeout(()=>closeGlobalSearch(),200)">
+                <div id="globalSearchResults" style="display:none; position:absolute; top:calc(100% + 8px); left:0; right:0; background:var(--bg-card); border-radius:16px; box-shadow:var(--shadow); z-index:99999; overflow:hidden; border:2px solid var(--border); max-height:380px; overflow-y:auto;"></div>
             </div>
 
         <div class="stats-grid">
@@ -726,7 +788,7 @@
                                 <option value="medium">Medium</option>
                                 <option value="low">Low</option>
                             </select>
-                            <input type="text" id="searchIssues" placeholder="🔍 Search issues..." oninput="renderAdminPanel()" style="padding:0.5rem 1rem;border:2px solid #e2e8f0;border-radius:8px;font-size:0.85rem;">
+                            <input type="text" id="searchIssues" placeholder="🔍 Search issues..." oninput="renderAdminPanel()" style="padding:0.5rem 1rem;border:2px solid var(--border);border-radius:8px;font-size:0.85rem;background:var(--input-bg);color:var(--text-primary);">
                             <button class="btn-secondary" onclick="exportIssuesCSV()" style="white-space:nowrap;">📅 Export CSV</button>
                         </div>
                     </div>
